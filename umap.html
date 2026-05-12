@@ -1,0 +1,2639 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Google Form embedumap</title>
+<style>
+  :root {
+    --bg: #11110f;
+    --bg-2: #171714;
+    --panel: rgba(29, 29, 24, 0.94);
+    --panel-strong: rgba(35, 35, 29, 0.98);
+    --chip: rgba(255, 255, 255, 0.055);
+    --line: rgba(213, 199, 156, 0.18);
+    --line-strong: rgba(213, 199, 156, 0.38);
+    --text: #f1ead8;
+    --muted: #b8ad91;
+    --faint: #807864;
+    --accent: #45c3a0;
+    --accent-2: #e0a84f;
+    --accent-3: #d96858;
+    --good: #45c3a0;
+    --warn: #e0a84f;
+    --bad: #d96858;
+    --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    --control-h: 32px;
+    color-scheme: dark;
+  }
+
+  body[data-theme="light"] {
+    --bg: #f6f2e8;
+    --bg-2: #ece4d3;
+    --panel: rgba(255, 252, 242, 0.93);
+    --panel-strong: rgba(255, 252, 242, 0.98);
+    --chip: rgba(37, 45, 42, 0.055);
+    --line: rgba(89, 78, 54, 0.2);
+    --line-strong: rgba(89, 78, 54, 0.42);
+    --text: #24251f;
+    --muted: #69604c;
+    --faint: #968a6f;
+    --shadow: 0 22px 64px rgba(71, 58, 34, 0.18);
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    overflow: hidden;
+    background:
+      linear-gradient(135deg, rgba(69, 195, 160, 0.12), transparent 34%),
+      linear-gradient(225deg, rgba(224, 168, 79, 0.11), transparent 32%),
+      repeating-linear-gradient(0deg, transparent 0, transparent 21px, rgba(255,255,255,0.025) 22px),
+      linear-gradient(180deg, var(--bg-2), var(--bg));
+    color: var(--text);
+    font-family: "Avenir Next", "Trebuchet MS", "Gill Sans", Verdana, sans-serif;
+    letter-spacing: 0;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.12;
+    background-image:
+      linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(180deg, #000, transparent 82%);
+  }
+
+  button, select, input { font: inherit; }
+
+  #app {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100dvh;
+  }
+
+  #controls, #timeline-bar {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(18px);
+  }
+
+  #timeline-bar {
+    display: none;
+    flex-wrap: nowrap;
+    border-top: 1px solid var(--line);
+    border-bottom: 0;
+    overflow-x: auto;
+  }
+
+  #timeline-bar.visible { display: flex; }
+
+  #brand {
+    display: grid;
+    gap: 1px;
+    min-width: 190px;
+    margin-right: 4px;
+  }
+
+  #brand-title {
+    font-weight: 800;
+    font-size: 1rem;
+  }
+
+  #brand-subtitle {
+    color: var(--faint);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+  }
+
+  .label {
+    color: var(--faint);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .button-group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  button, select, input[type="search"], input[type="text"], input[type="password"] {
+    min-height: var(--control-h);
+    color: var(--text);
+    background: var(--chip);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+  }
+
+  button, select {
+    padding: 6px 10px;
+  }
+
+  button {
+    cursor: pointer;
+    transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
+  }
+
+  button:hover, select:hover, input:hover {
+    border-color: var(--line-strong);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  button:active { transform: translateY(1px); }
+
+  button.active, .button-group button.active {
+    color: #06130f;
+    background: var(--accent);
+    border-color: transparent;
+  }
+
+  body[data-theme="light"] button.active,
+  body[data-theme="light"] .button-group button.active {
+    color: #06201a;
+  }
+
+  button.danger { color: #ffd8d1; border-color: rgba(217, 104, 88, 0.5); }
+
+  input[type="search"], input[type="text"], input[type="password"] {
+    padding: 6px 10px;
+  }
+
+  #control-search {
+    width: clamp(150px, 16vw, 260px);
+  }
+
+  #source-mode { width: 128px; }
+  #sheet-id { width: 260px; }
+  #sheet-gid { width: 112px; }
+
+  select:focus-visible, button:focus-visible, input:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 72%, transparent);
+    outline-offset: 2px;
+  }
+
+  option {
+    color: var(--text);
+    background: var(--bg-2);
+  }
+
+  #status-stack {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-wrap: wrap;
+    max-width: min(760px, 52vw);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 24px;
+    padding: 3px 7px;
+    color: var(--muted);
+    background: var(--chip);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+
+  .chip strong { color: var(--text); font-weight: 700; }
+  .chip.good { border-color: color-mix(in srgb, var(--good) 44%, transparent); }
+  .chip.warn { border-color: color-mix(in srgb, var(--warn) 54%, transparent); color: color-mix(in srgb, var(--warn) 86%, var(--text)); }
+  .chip.bad { border-color: color-mix(in srgb, var(--bad) 58%, transparent); color: #ffd5cf; }
+
+  #plot-wrap {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  #plot, #overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  #overlay {
+    z-index: 2;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .selection-box {
+    fill: color-mix(in srgb, var(--accent) 18%, transparent);
+    stroke: var(--accent);
+    stroke-width: 1.4px;
+    pointer-events: none;
+  }
+
+  #loading {
+    position: absolute;
+    z-index: 20;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--bg) 76%, transparent);
+    backdrop-filter: blur(10px);
+    transition: opacity 180ms ease;
+  }
+
+  #loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .loading-card, .modal-card {
+    width: min(520px, 92vw);
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    background: var(--panel-strong);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+  }
+
+  .loading-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .spinner {
+    width: 23px;
+    height: 23px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    border-top-color: var(--accent);
+    animation: spin 900ms linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-title {
+    font-weight: 800;
+    font-size: 1.02rem;
+  }
+
+  .loading-copy {
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .progress-track {
+    height: 7px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--chip);
+    border: 1px solid var(--line);
+  }
+
+  .progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width 220ms ease;
+  }
+
+  #bar-chart {
+    position: absolute;
+    z-index: 3;
+    top: 14px;
+    right: 14px;
+    width: min(340px, calc(100% - 28px));
+    display: grid;
+    gap: 6px;
+    pointer-events: auto;
+  }
+
+  #bar-chart.hidden { display: none; }
+
+  .bar-chart-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+  }
+
+  .bar-chart-body {
+    display: grid;
+    gap: 4px;
+    max-height: min(42vh, 420px);
+    overflow: auto;
+    padding: 8px;
+    background: color-mix(in srgb, var(--panel) 86%, transparent);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    backdrop-filter: blur(12px);
+  }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: minmax(80px, 1fr) 3fr auto;
+    gap: 7px;
+    align-items: center;
+    min-height: 22px;
+    cursor: pointer;
+  }
+
+  .bar-row:hover .bar-label { color: var(--text); }
+
+  .bar-label, .bar-count {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--muted);
+    font-size: 0.76rem;
+  }
+
+  .bar-track {
+    height: 7px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--chip);
+  }
+
+  .bar-fill {
+    height: 100%;
+    min-width: 2px;
+    border-radius: inherit;
+  }
+
+  #timeline-wrap {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  #timeline-tools {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+  }
+
+  .timeline-label {
+    min-width: 104px;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  #timeline-end { text-align: right; }
+
+  .range-block {
+    position: relative;
+    flex: 1 1 auto;
+    height: 34px;
+    min-width: 280px;
+  }
+
+  .timeline-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 15px;
+    height: 5px;
+    border-radius: 4px;
+    background: var(--chip);
+    border: 1px solid var(--line);
+  }
+
+  .timeline-fill {
+    position: absolute;
+    top: 15px;
+    height: 5px;
+    border-radius: 4px;
+    background: var(--accent);
+    cursor: grab;
+  }
+
+  .timeline-duration {
+    position: absolute;
+    top: -1px;
+    transform: translateX(-50%);
+    color: var(--faint);
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+
+  .range-block input[type="range"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 34px;
+    margin: 0;
+    appearance: none;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .range-block input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 13px;
+    height: 20px;
+    border-radius: 4px;
+    background: var(--text);
+    border: 2px solid var(--accent);
+    pointer-events: auto;
+    cursor: ew-resize;
+  }
+
+  .range-block input[type="range"]::-moz-range-thumb {
+    width: 13px;
+    height: 20px;
+    border-radius: 4px;
+    background: var(--text);
+    border: 2px solid var(--accent);
+    pointer-events: auto;
+    cursor: ew-resize;
+  }
+
+  .mini-slider {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+
+  .mini-slider input {
+    width: 90px;
+  }
+
+  #tooltip {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1000;
+    display: none;
+    max-width: min(380px, 90vw);
+    max-height: min(540px, 78vh);
+    overflow: auto;
+    padding: 10px;
+    background: var(--panel-strong);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+  }
+
+  .tooltip-label {
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .tooltip-grid, .field-grid {
+    display: grid;
+    grid-template-columns: minmax(110px, auto) 1fr;
+    gap: 6px 10px;
+    font-size: 0.78rem;
+  }
+
+  .tooltip-key, .field-key { color: var(--accent); }
+  .tooltip-value, .field-value { color: var(--text); word-break: break-word; }
+
+  #popup-backdrop, #settings-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    background: rgba(0, 0, 0, 0.48);
+    backdrop-filter: blur(5px);
+  }
+
+  #popup {
+    position: fixed;
+    inset: 5vh 4vw;
+    z-index: 110;
+    display: none;
+    grid-template-rows: auto auto 1fr;
+    background: var(--panel-strong);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  #settings-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    display: none;
+    place-items: center;
+    padding: 20px;
+  }
+
+  #popup.visible, #popup-backdrop.visible, #settings-backdrop.visible { display: block; }
+  #popup.visible { display: grid; }
+  #settings-modal.visible { display: grid; }
+
+  .popup-head, .toolbar, .modal-head, .modal-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 11px 13px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .popup-head, .modal-head { justify-content: space-between; }
+  .modal-actions { border-top: 1px solid var(--line); border-bottom: 0; justify-content: flex-end; padding: 0; padding-top: 12px; }
+
+  .popup-title, .modal-title {
+    font-weight: 800;
+  }
+
+  .close-button {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #popup-body {
+    overflow: auto;
+    padding: 13px;
+  }
+
+  .popup-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .popup-table th, .popup-table td {
+    border-bottom: 1px solid var(--line);
+    padding: 8px 9px;
+    text-align: left;
+    vertical-align: top;
+    font-size: 0.78rem;
+  }
+
+  .popup-table th {
+    position: sticky;
+    top: 0;
+    color: var(--accent);
+    background: var(--panel-strong);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .popup-table th.sorted {
+    color: var(--text);
+  }
+
+  .card-grid, .card-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .row-card {
+    display: grid;
+    gap: 9px;
+    padding: 11px;
+    background: var(--chip);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  .row-card-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .row-card-title { font-weight: 800; }
+  .row-card-subtitle { color: var(--muted); font-size: 0.76rem; }
+
+  .settings-form {
+    display: grid;
+    gap: 10px;
+  }
+
+  .settings-row {
+    display: grid;
+    grid-template-columns: 128px 1fr;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .settings-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+
+  .settings-help {
+    color: var(--muted);
+    line-height: 1.45;
+    font-size: 0.86rem;
+  }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 1050px) {
+    #status-stack {
+      max-width: 100%;
+      margin-left: 0;
+      justify-content: flex-start;
+    }
+    #sheet-id { width: 190px; }
+    #bar-chart { width: min(300px, calc(100% - 28px)); }
+  }
+</style>
+</head>
+<body data-theme="dark">
+<div id="app">
+  <header id="controls">
+    <div id="brand">
+      <div id="brand-title">Live embedumap</div>
+      <div id="brand-subtitle">Google Form to semantic map</div>
+    </div>
+    <span class="label">Source</span>
+    <select id="source-mode" aria-label="Source mode">
+      <option value="sheet">Live sheet</option>
+      <option value="sample">Sample CSV</option>
+    </select>
+    <input id="sheet-id" type="text" aria-label="Google Sheet ID">
+    <input id="sheet-gid" type="text" aria-label="Google Sheet gid">
+    <button id="refresh-btn" type="button" title="Refresh now">Refresh</button>
+    <button id="pause-btn" type="button" title="Pause or resume polling">Pause</button>
+    <button id="key-btn" type="button" title="Set Gemini API key">API key</button>
+    <button id="theme-btn" type="button" title="Toggle theme">Theme</button>
+    <span class="label">Search</span>
+    <input id="control-search" type="search" placeholder="Name, answer, cluster" aria-label="Search rows">
+    <span class="label">Color</span>
+    <div id="color-group" class="button-group"></div>
+    <span class="label">Filter</span>
+    <div id="filter-group" class="button-group"></div>
+    <div id="status-stack" aria-live="polite">
+      <span id="rows-chip" class="chip">Rows <strong>0</strong></span>
+      <span id="new-chip" class="chip">New <strong>0</strong></span>
+      <span id="cache-chip" class="chip">Cache <strong>0</strong></span>
+      <span id="project-chip" class="chip">Project <strong>idle</strong></span>
+      <span id="last-chip" class="chip">Last <strong>never</strong></span>
+      <span id="error-chip" class="chip hidden"></span>
+    </div>
+  </header>
+
+  <main id="plot-wrap">
+    <div id="loading">
+      <div class="loading-card">
+        <div class="loading-head">
+          <div class="spinner"></div>
+          <div>
+            <div id="loading-title" class="loading-title">Preparing live map</div>
+            <div id="loading-copy" class="loading-copy">Waiting for rows, embeddings, and browser projection.</div>
+          </div>
+        </div>
+        <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+      </div>
+    </div>
+    <canvas id="plot"></canvas>
+    <svg id="overlay"></svg>
+    <aside id="bar-chart" class="hidden">
+      <div id="bar-chart-head" class="bar-chart-head"></div>
+      <div id="bar-chart-body" class="bar-chart-body"></div>
+    </aside>
+  </main>
+
+  <footer id="timeline-bar">
+    <div id="timeline-wrap">
+      <div id="timeline-tools">
+        <button id="timeline-play" type="button">Play</button>
+        <button id="timeline-cumulative" type="button" aria-pressed="false">Cumulative</button>
+        <label class="mini-slider">Speed <input id="timeline-speed" type="range" min="0" max="10000" step="1"></label>
+        <span id="timeline-speed-value" class="label"></span>
+        <label class="mini-slider">Dim <input id="timeline-inactive-opacity" type="range" min="0" max="100" step="1"></label>
+        <span id="timeline-inactive-opacity-value" class="label"></span>
+      </div>
+      <span id="timeline-start" class="timeline-label"></span>
+      <div id="timeline-range" class="range-block">
+        <div class="timeline-line"></div>
+        <div id="timeline-fill" class="timeline-fill"></div>
+        <div id="timeline-duration" class="timeline-duration"></div>
+        <input id="timeline-min" type="range" aria-label="Timeline start">
+        <input id="timeline-max" type="range" aria-label="Timeline end">
+      </div>
+      <span id="timeline-end" class="timeline-label"></span>
+    </div>
+  </footer>
+</div>
+
+<div id="tooltip"></div>
+<div id="popup-backdrop"></div>
+<section id="popup" aria-modal="true">
+  <div class="popup-head">
+    <div id="popup-title" class="popup-title"></div>
+    <button id="popup-close" class="close-button" type="button" aria-label="Close popup">X</button>
+  </div>
+  <div class="toolbar">
+    <span class="label">Sort</span>
+    <select id="sort-column"></select>
+    <button id="sort-direction" type="button">Ascending</button>
+    <span class="label">View</span>
+    <div id="popup-style-group" class="button-group">
+      <button type="button" data-popup-style="table">Table</button>
+      <button type="button" data-popup-style="grid">Grid</button>
+      <button type="button" data-popup-style="list">List</button>
+    </div>
+  </div>
+  <div id="popup-body"></div>
+</section>
+
+<div id="settings-backdrop"></div>
+<section id="settings-modal" aria-modal="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Gemini settings</div>
+      <button id="settings-close" class="close-button" type="button" aria-label="Close settings">X</button>
+    </div>
+    <div class="settings-form">
+      <div class="settings-help">The API key is saved only in this browser's localStorage. It is not written into this HTML file.</div>
+      <label class="settings-row">
+        <span class="label">API key</span>
+        <input id="api-key-input" type="password" autocomplete="off" placeholder="Paste key">
+      </label>
+      <label class="settings-row">
+        <span class="label">Preview</span>
+        <span><input id="preview-vectors" type="checkbox"> Local preview vectors for sample testing</span>
+      </label>
+      <div class="modal-actions">
+        <button id="clear-key-btn" type="button" class="danger">Clear key</button>
+        <button id="save-key-btn" type="button" class="active">Save</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/umap-js@1.4.0/lib/umap-js.min.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  const DEFAULT_SHEET_ID = "1AYPXWYaDnsQmkZJqGicUCCVmcIzX18kKd_kL10pFi0A";
+  const DEFAULT_GID = "1433379065";
+  const POLL_MS = 5000;
+  const STALE_MS = 22000;
+  const EMBEDDING_MODEL = "gemini-embedding-2";
+  const EMBEDDING_DIMS = 768;
+  const PREVIEW_DIMS = 128;
+  const BATCH_SIZE = 8;
+  const DB_NAME = "live-google-form-embedumap-v1";
+  const KEY_STORAGE = "liveEmbedumapGeminiKey";
+  const PREVIEW_STORAGE = "liveEmbedumapPreviewVectors";
+  const THEME_STORAGE = "liveEmbedumapTheme";
+  const sliderMax = 10000;
+  const speedSliderMax = 10000;
+  const opacitySliderMax = 100;
+  const opacitySliderExponent = 2.4;
+  const minPlaybackDurationMs = 1000;
+  const maxPlaybackDurationMs = 600000;
+  const defaultPlaybackDurationMs = 30000;
+
+  const mapping = {
+    embeddingColumns: [
+      "Workshop question",
+      "What should this group explore next?",
+      "Blocker or question",
+    ],
+    labelColumn: "Name",
+    timelineColumn: "Timestamp",
+    categoryColumns: ["Team", "Role", "Region", "Experience level", "Energy"],
+  };
+  const colorColumns = [...mapping.categoryColumns, "cluster"];
+  const filterColumns = [...mapping.categoryColumns, "cluster"];
+  const palette = [
+    "#45c3a0", "#e0a84f", "#d96858", "#6fa7d7", "#b98ad9", "#83b75d",
+    "#d7839a", "#63b7bd", "#c7b25c", "#8d99c7", "#c58555", "#60a782",
+    "#d56f6f", "#74a071", "#a78b60", "#8db2a5", "#cf88c4", "#8fbc65",
+  ];
+  const margin = { top: 18, right: 18, bottom: 18, left: 18 };
+  const pointRadius = 4.2;
+  const sampleFallbackCsv = `"Timestamp","Name","Team","Role","Region","Experience level","Workshop question","What should this group explore next?","Blocker or question","Energy"
+"2026-05-08 09:00:03","Aarav Menon","Product","Participant","Asia","Intermediate","How can a live map help people find adjacent ideas during a workshop?","Prompts that reveal repeated needs and surprising contrasts.","I need a clear way to explain the map before people see it.","High"
+"2026-05-08 09:00:41","Diego Alvarez","Engineering","Participant","Europe","Advanced","What is the smallest technical stack that still feels reliable for a live session?","A static app with IndexedDB caching and a worker-based projection.","Can browser-only UMAP handle one hundred live rows smoothly?","Medium"
+"2026-05-08 09:03:00","Tessa Green","Facilitation","Participant","Europe","Intermediate","What do facilitators need when the room gets noisy?","Brush selection and a response viewer that surfaces exact answers.","I need to select a cluster and read the underlying responses quickly.","High"`;
+
+  const $ = (selector, element = document) => element.querySelector(selector);
+  const plot = $("#plot");
+  const overlay = d3.select("#overlay");
+  const overlayNode = overlay.node();
+  const selectionBox = overlay.append("rect").attr("class", "selection-box").style("display", "none");
+  const tooltip = $("#tooltip");
+  const loading = $("#loading");
+  const loadingTitle = $("#loading-title");
+  const loadingCopy = $("#loading-copy");
+  const progressFill = $("#progress-fill");
+  const popup = $("#popup");
+  const popupBackdrop = $("#popup-backdrop");
+  const popupBody = $("#popup-body");
+  const popupTitle = $("#popup-title");
+  const barChart = $("#bar-chart");
+  const barChartHead = $("#bar-chart-head");
+  const barChartBody = d3.select("#bar-chart-body");
+
+  const state = {
+    sourceMode: "sheet",
+    sheetId: DEFAULT_SHEET_ID,
+    gid: DEFAULT_GID,
+    apiKey: localStorage.getItem(KEY_STORAGE) || "",
+    previewVectors: localStorage.getItem(PREVIEW_STORAGE) === "1",
+    paused: false,
+    refreshing: false,
+    colorBy: "Team",
+    filters: Object.fromEntries(filterColumns.map((column) => [column, ""])),
+    searchQuery: "",
+    selectedIds: new Set(),
+    popupStyle: "table",
+    sortColumn: mapping.timelineColumn,
+    sortAsc: true,
+    timelineMin: null,
+    timelineMax: null,
+    playing: false,
+    playbackMode: "slide",
+    playDurationMs: defaultPlaybackDurationMs,
+    inactiveOpacity: 0.08,
+    lastSuccessAt: null,
+    lastRowCount: 0,
+    lastSignature: "",
+    lastCsvText: "",
+    projectionTicket: 0,
+  };
+
+  let DATA = null;
+  let width = 0;
+  let height = 0;
+  let dpr = window.devicePixelRatio || 1;
+  let xScale = d3.scaleLinear();
+  let yScale = d3.scaleLinear();
+  let xDomain = [0, 1];
+  let yDomain = [0, 1];
+  let quadtree = null;
+  let dragState = null;
+  let pollTimer = 0;
+  let playRaf = 0;
+  let playPrev = null;
+  let projectionWorker = null;
+  let dbPromise = null;
+  const memoryCache = new Map();
+
+  const timelineFormatter = new Intl.DateTimeFormat(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  }
+
+  function truncate(value, limit = 160) {
+    const text = String(value ?? "").trim();
+    return text.length <= limit ? text : `${text.slice(0, limit - 1).trim()}...`;
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function normalizeVector(vector) {
+    let norm = 0;
+    for (const value of vector) norm += value * value;
+    norm = Math.sqrt(norm) || 1;
+    return Array.from(vector, (value) => value / norm);
+  }
+
+  function formatClock(date) {
+    return date ? new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+    }).format(date) : "never";
+  }
+
+  function formatTimeline(ms) {
+    return ms == null ? "" : timelineFormatter.format(new Date(ms));
+  }
+
+  function formatDuration(ms0, ms1) {
+    const totalMinutes = Math.max(0, Math.round((ms1 - ms0) / 60000));
+    if (totalMinutes < 120) return `${totalMinutes}m`;
+    const totalHours = Math.round(totalMinutes / 60);
+    if (totalHours < 72) return `${totalHours}h`;
+    const totalDays = Math.round(totalHours / 24);
+    if (totalDays < 120) return `${totalDays}d`;
+    const totalMonths = Math.round(totalDays / 30.44);
+    if (totalMonths < 24) return `${totalMonths}mo`;
+    const years = Math.floor(totalMonths / 12);
+    const months = totalMonths % 12;
+    return months ? `${years}y ${months}mo` : `${years}y`;
+  }
+
+  function formatPlaybackDuration(ms) {
+    if (ms < 10000) return `${(ms / 1000).toFixed(1).replace(/\.0$/, "")}s`;
+    if (ms < 60000) return `${Math.round(ms / 1000)}s`;
+    return `${Math.round(ms / 60000)}m`;
+  }
+
+  function inactiveOpacity() {
+    return clamp(state.inactiveOpacity ?? 0.08, 0, 1);
+  }
+
+  function opacityToSlider(value) {
+    return Math.round(Math.pow(clamp(value, 0, 1), 1 / opacitySliderExponent) * opacitySliderMax);
+  }
+
+  function sliderToOpacity(value) {
+    const ratio = clamp(Number(value), 0, opacitySliderMax) / opacitySliderMax;
+    return Math.pow(ratio, opacitySliderExponent);
+  }
+
+  function durationToSpeedSlider(durationMs) {
+    const minLog = Math.log(minPlaybackDurationMs);
+    const maxLog = Math.log(maxPlaybackDurationMs);
+    const value = clamp(durationMs, minPlaybackDurationMs, maxPlaybackDurationMs);
+    return Math.round(((maxLog - Math.log(value)) / (maxLog - minLog)) * speedSliderMax);
+  }
+
+  function speedSliderToDuration(value) {
+    const minLog = Math.log(minPlaybackDurationMs);
+    const maxLog = Math.log(maxPlaybackDurationMs);
+    const ratio = clamp(Number(value), 0, speedSliderMax) / speedSliderMax;
+    return Math.round(Math.exp(maxLog - ratio * (maxLog - minLog)));
+  }
+
+  function sliderToMs(value) {
+    if (!DATA || DATA.timelineMin == null || DATA.timelineMax == null) return 0;
+    return DATA.timelineMin + (Number(value) / sliderMax) * (DATA.timelineMax - DATA.timelineMin);
+  }
+
+  function msToSlider(ms) {
+    if (!DATA || DATA.timelineMin == null || DATA.timelineMax == null) return 0;
+    const total = DATA.timelineMax - DATA.timelineMin || 1;
+    return Math.round(((ms - DATA.timelineMin) / total) * sliderMax);
+  }
+
+  function parseTimeline(value) {
+    const text = String(value ?? "").trim();
+    if (!text) return null;
+    const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(text) ? text.replace(" ", "T") : text;
+    const parsed = Date.parse(normalized);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  function hashParams() {
+    const hash = window.location.hash.replace(/^#/, "");
+    const query = hash.includes("?") ? hash.slice(hash.indexOf("?") + 1) : hash;
+    return new URLSearchParams(query);
+  }
+
+  function applyUrlState() {
+    const params = hashParams();
+    const source = params.get("source");
+    if (source === "sheet" || source === "sample") state.sourceMode = source;
+    const color = params.get("color");
+    if (color && colorColumns.includes(color)) state.colorBy = color;
+    const search = params.get("q");
+    if (search != null) state.searchQuery = search;
+    const popupStyle = params.get("popup");
+    if (["table", "grid", "list"].includes(popupStyle)) state.popupStyle = popupStyle;
+    const sort = params.get("sort");
+    if (sort) state.sortColumn = sort;
+    state.sortAsc = params.get("dir") !== "desc";
+    state.paused = params.get("paused") === "1";
+    for (const column of filterColumns) {
+      const value = params.get(`filter.${column}`);
+      if (value != null) state.filters[column] = value;
+    }
+    if (DATA && DATA.timelineMin != null && DATA.timelineMax != null) {
+      const start = params.has("start") ? Number(params.get("start")) : NaN;
+      const end = params.has("end") ? Number(params.get("end")) : NaN;
+      if (Number.isFinite(start)) state.timelineMin = clamp(start, DATA.timelineMin, DATA.timelineMax);
+      if (Number.isFinite(end)) state.timelineMax = clamp(end, DATA.timelineMin, DATA.timelineMax);
+      if (state.timelineMin > state.timelineMax) {
+        state.timelineMin = DATA.timelineMin;
+        state.timelineMax = DATA.timelineMax;
+      }
+    }
+  }
+
+  function syncUrlState() {
+    const params = new URLSearchParams();
+    if (state.sourceMode !== "sheet") params.set("source", state.sourceMode);
+    if (state.colorBy !== "Team") params.set("color", state.colorBy);
+    if (state.searchQuery.trim()) params.set("q", state.searchQuery.trim());
+    if (state.popupStyle !== "table") params.set("popup", state.popupStyle);
+    if (state.sortColumn !== mapping.timelineColumn) params.set("sort", state.sortColumn);
+    if (!state.sortAsc) params.set("dir", "desc");
+    if (state.paused) params.set("paused", "1");
+    for (const column of filterColumns) {
+      if (state.filters[column]) params.set(`filter.${column}`, state.filters[column]);
+    }
+    if (DATA && DATA.timelineMin != null && DATA.timelineMax != null) {
+      if (Math.abs(state.timelineMin - DATA.timelineMin) > 1) params.set("start", String(Math.round(state.timelineMin)));
+      if (Math.abs(state.timelineMax - DATA.timelineMax) > 1) params.set("end", String(Math.round(state.timelineMax)));
+    }
+    const query = params.toString();
+    const next = `${window.location.pathname}${window.location.search}#live${query ? `?${query}` : ""}`;
+    window.history.replaceState({}, "", next);
+  }
+
+  function setLoading(title, copy, percent = null, visible = true) {
+    loadingTitle.textContent = title;
+    loadingCopy.textContent = copy;
+    if (percent != null) progressFill.style.width = `${clamp(percent, 0, 100)}%`;
+    loading.classList.toggle("hidden", !visible);
+  }
+
+  function setError(message) {
+    const chip = $("#error-chip");
+    chip.textContent = message;
+    chip.classList.remove("hidden");
+    chip.classList.add("bad");
+  }
+
+  function clearError() {
+    const chip = $("#error-chip");
+    chip.textContent = "";
+    chip.classList.add("hidden");
+    chip.classList.remove("bad");
+  }
+
+  function updateStatus(extra = {}) {
+    $("#rows-chip").innerHTML = `Rows <strong>${DATA?.rows.length ?? 0}</strong>`;
+    $("#new-chip").innerHTML = `New <strong>${extra.newRows ?? 0}</strong>`;
+    $("#cache-chip").innerHTML = `Cache <strong>${extra.cacheHits ?? 0}</strong>`;
+    $("#project-chip").innerHTML = `Project <strong>${extra.project ?? "idle"}</strong>`;
+    $("#last-chip").innerHTML = `Last <strong>${formatClock(state.lastSuccessAt)}</strong>`;
+    $("#pause-btn").textContent = state.paused ? "Resume" : "Pause";
+    $("#pause-btn").classList.toggle("active", state.paused);
+    $("#source-mode").value = state.sourceMode;
+    $("#sheet-id").value = state.sheetId;
+    $("#sheet-gid").value = state.gid;
+  }
+
+  function updateClockStatus() {
+    const chip = $("#last-chip");
+    chip.innerHTML = `Last <strong>${formatClock(state.lastSuccessAt)}</strong>`;
+    chip.classList.toggle("warn", Boolean(state.lastSuccessAt && Date.now() - state.lastSuccessAt.getTime() > STALE_MS));
+  }
+
+  function openDb() {
+    if (!("indexedDB" in window)) return Promise.resolve(null);
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve) => {
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains("embeddings")) {
+          db.createObjectStore("embeddings", { keyPath: "key" });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => resolve(null);
+    });
+    return dbPromise;
+  }
+
+  function idbGet(store, key) {
+    return new Promise((resolve) => {
+      const request = store.get(key);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => resolve(null);
+    });
+  }
+
+  async function getCachedEmbeddings(keys) {
+    const result = new Map();
+    for (const key of keys) {
+      if (memoryCache.has(key)) result.set(key, memoryCache.get(key));
+    }
+    const missing = keys.filter((key) => !result.has(key));
+    if (!missing.length) return result;
+    const db = await openDb();
+    if (!db) return result;
+    const tx = db.transaction("embeddings", "readonly");
+    const store = tx.objectStore("embeddings");
+    await Promise.all(missing.map(async (key) => {
+      const row = await idbGet(store, key);
+      if (row?.vector) {
+        memoryCache.set(key, row.vector);
+        result.set(key, row.vector);
+      }
+    }));
+    return result;
+  }
+
+  async function putCachedEmbeddings(rows) {
+    for (const row of rows) memoryCache.set(row.key, row.vector);
+    const db = await openDb();
+    if (!db || !rows.length) return;
+    await new Promise((resolve) => {
+      const tx = db.transaction("embeddings", "readwrite");
+      const store = tx.objectStore("embeddings");
+      for (const row of rows) store.put(row);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
+  }
+
+  async function sha256Hex(text) {
+    if (window.crypto?.subtle) {
+      const bytes = new TextEncoder().encode(text);
+      const digest = await window.crypto.subtle.digest("SHA-256", bytes);
+      return [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, "0")).join("");
+    }
+    let hash = 2166136261;
+    for (let i = 0; i < text.length; i += 1) {
+      hash ^= text.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).padStart(8, "0");
+  }
+
+  function fnv1a(text) {
+    let hash = 2166136261;
+    for (let i = 0; i < text.length; i += 1) {
+      hash ^= text.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  function previewEmbedding(text) {
+    const vector = new Float32Array(PREVIEW_DIMS);
+    const words = text.toLowerCase().match(/[a-z0-9]+/g) || [];
+    const terms = [];
+    for (const word of words) terms.push(word);
+    const compact = words.join(" ");
+    for (let i = 0; i < compact.length - 2; i += 1) terms.push(compact.slice(i, i + 3));
+    for (const term of terms) {
+      const h = fnv1a(term);
+      const idx = h % PREVIEW_DIMS;
+      const sign = (h & 1) ? 1 : -1;
+      vector[idx] += sign * (term.length > 4 ? 1.25 : 0.8);
+    }
+    return normalizeVector(vector);
+  }
+
+  function sourceUrl() {
+    const cacheBust = `_=${Date.now()}`;
+    if (state.sourceMode === "sample") return `sample.csv?${cacheBust}`;
+    const sheetId = encodeURIComponent(state.sheetId.trim() || DEFAULT_SHEET_ID);
+    const gid = encodeURIComponent(state.gid.trim() || DEFAULT_GID);
+    return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}&${cacheBust}`;
+  }
+
+  async function fetchCsvText() {
+    if (state.sourceMode === "sample") {
+      try {
+        const response = await fetch(sourceUrl(), { cache: "no-store" });
+        if (!response.ok) throw new Error(`Sample CSV returned ${response.status}`);
+        return await response.text();
+      } catch (error) {
+        return sampleFallbackCsv;
+      }
+    }
+    const response = await fetch(sourceUrl(), { cache: "no-store", mode: "cors" });
+    if (!response.ok) throw new Error(`Google Sheet CSV returned ${response.status}`);
+    return await response.text();
+  }
+
+  function rowTextPayload(raw) {
+    return mapping.embeddingColumns
+      .map((column) => {
+        const value = String(raw[column] ?? "").trim();
+        return value ? `${column}: ${value}` : "";
+      })
+      .filter(Boolean)
+      .join("\n\n");
+  }
+
+  async function prepareRecords(csvText) {
+    const parsed = d3.csvParse(csvText);
+    const columns = parsed.columns || Object.keys(parsed[0] || {});
+    const records = [];
+    const hashOccurrences = new Map();
+    let skipped = 0;
+    for (let index = 0; index < parsed.length; index += 1) {
+      const raw = {};
+      for (const column of columns) raw[column] = String(parsed[index][column] ?? "").trim();
+      const textPayload = rowTextPayload(raw);
+      if (!textPayload.trim()) {
+        skipped += 1;
+        continue;
+      }
+      const semanticText = `Represent this live workshop form response for semantic clustering.\n\n${textPayload}`;
+      const hash = await sha256Hex(semanticText);
+      const occurrence = hashOccurrences.get(hash) || 0;
+      hashOccurrences.set(hash, occurrence + 1);
+      const label = truncate(raw[mapping.labelColumn] || `Row ${index + 1}`, 140);
+      const timelineMs = parseTimeline(raw[mapping.timelineColumn]);
+      const tooltip = Object.fromEntries(columns.map((column) => [column, truncate(raw[column], 180)]));
+      records.push({
+        id: `${hash}-${occurrence}`,
+        rowIndex: index,
+        raw,
+        tooltip,
+        label,
+        textPayload: semanticText,
+        hash,
+        timelineMs,
+        timelineText: timelineMs == null ? "" : formatTimeline(timelineMs),
+      });
+    }
+    return { columns, records, skipped };
+  }
+
+  async function sleep(ms) {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function geminiBatch(batch) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:batchEmbedContents`;
+    const body = {
+      requests: batch.map((record) => ({
+        model: `models/${EMBEDDING_MODEL}`,
+        content: { parts: [{ text: record.textPayload }] },
+        outputDimensionality: EMBEDDING_DIMS,
+      })),
+    };
+    let delay = 1200;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": state.apiKey,
+        },
+        body: JSON.stringify(body),
+      });
+      if (response.ok) {
+        const payload = await response.json();
+        const embeddings = payload.embeddings || [];
+        if (embeddings.length !== batch.length) {
+          throw new Error(`Gemini returned ${embeddings.length} embeddings for ${batch.length} rows`);
+        }
+        return embeddings.map((embedding) => normalizeVector(embedding.values || []));
+      }
+      const errorText = await response.text();
+      if (![429, 500, 502, 503, 504].includes(response.status) || attempt === 4) {
+        throw new Error(`Gemini ${response.status}: ${truncate(errorText, 220)}`);
+      }
+      await sleep(delay);
+      delay = Math.min(delay * 2, 15000);
+    }
+    throw new Error("Gemini embedding request failed");
+  }
+
+  async function embedRecords(records) {
+    if (state.previewVectors) {
+      const vectors = records.map((record) => previewEmbedding(record.textPayload));
+      return { vectors, cacheHits: 0, embedded: records.length, preview: true };
+    }
+    if (!state.apiKey) {
+      throw new Error("Gemini API key required. Click API key to save it in this browser.");
+    }
+    const keys = records.map((record) => `${EMBEDDING_MODEL}|${EMBEDDING_DIMS}|${record.hash}`);
+    const cached = await getCachedEmbeddings(keys);
+    const vectors = new Array(records.length);
+    const missing = [];
+    for (let index = 0; index < records.length; index += 1) {
+      const vector = cached.get(keys[index]);
+      if (vector) vectors[index] = vector;
+      else missing.push(index);
+    }
+    let embedded = 0;
+    for (let start = 0; start < missing.length; start += BATCH_SIZE) {
+      const batchIndices = missing.slice(start, start + BATCH_SIZE);
+      const batch = batchIndices.map((index) => records[index]);
+      setLoading(
+        "Embedding new rows",
+        `${embedded + 1}-${embedded + batch.length} of ${missing.length} uncached rows`,
+        24 + ((embedded / Math.max(1, missing.length)) * 26),
+        !DATA
+      );
+      const batchVectors = await geminiBatch(batch);
+      const cacheRows = [];
+      for (let i = 0; i < batchIndices.length; i += 1) {
+        const rowIndex = batchIndices[i];
+        vectors[rowIndex] = batchVectors[i];
+        cacheRows.push({
+          key: keys[rowIndex],
+          vector: batchVectors[i],
+          model: EMBEDDING_MODEL,
+          dimensions: EMBEDDING_DIMS,
+          hash: records[rowIndex].hash,
+          savedAt: new Date().toISOString(),
+        });
+      }
+      await putCachedEmbeddings(cacheRows);
+      embedded += batch.length;
+      updateStatus({ newRows: Math.max(0, records.length - state.lastRowCount), cacheHits: cached.size, project: "embedding" });
+    }
+    return { vectors, cacheHits: cached.size, embedded, preview: false };
+  }
+
+  function workerSource() {
+    return `
+      importScripts("https://cdn.jsdelivr.net/npm/umap-js@1.4.0/lib/umap-js.min.js");
+      const UMAPCtor = self.UMAP && (self.UMAP.UMAP || self.UMAP.default || self.UMAP);
+      let fitted = null;
+      let fittedHashes = [];
+      let fittedCoords = [];
+
+      function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+      function mulberry32(seed) {
+        let value = seed >>> 0;
+        return function random() {
+          value += 0x6D2B79F5;
+          let t = value;
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+      function dot(a, b) {
+        let value = 0;
+        for (let i = 0; i < a.length; i += 1) value += a[i] * b[i];
+        return value;
+      }
+      function cosineDistance(a, b) {
+        let ab = 0, aa = 0, bb = 0;
+        for (let i = 0; i < a.length; i += 1) {
+          ab += a[i] * b[i];
+          aa += a[i] * a[i];
+          bb += b[i] * b[i];
+        }
+        if (!aa || !bb) return 1;
+        return 1 - (ab / (Math.sqrt(aa) * Math.sqrt(bb)));
+      }
+      function normalize(vector) {
+        let norm = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0)) || 1;
+        return vector.map((value) => value / norm);
+      }
+      function clusterCount(count) {
+        if (count <= 1) return 1;
+        if (count < 9) return 2;
+        return Math.min(12, Math.max(2, Math.round(Math.sqrt(count))));
+      }
+      function fallbackCoords(vectors) {
+        const count = vectors.length;
+        if (!count) return [];
+        if (count === 1) return [[0, 0]];
+        if (count === 2) return [[-1, 0], [1, 0]];
+        return vectors.map((vector, index) => {
+          let x = 0, y = 0;
+          for (let i = 0; i < vector.length; i += 1) {
+            const angle = (i * 2.3999632297) + 0.3;
+            x += vector[i] * Math.cos(angle);
+            y += vector[i] * Math.sin(angle);
+          }
+          const spread = 0.08 * index;
+          return [x + Math.cos(index) * spread, y + Math.sin(index) * spread];
+        });
+      }
+      function runKmeans(vectors) {
+        const count = vectors.length;
+        const k = clusterCount(count);
+        if (!count) return { ids: [], labels: [] };
+        if (k === 1) return { ids: new Array(count).fill(0), labels: [{ id: 0, label: "Cluster 1", count }] };
+        const data = vectors.map(normalize);
+        const centroids = [data[0].slice()];
+        while (centroids.length < k) {
+          let bestIndex = 0;
+          let bestDistance = -Infinity;
+          for (let i = 0; i < data.length; i += 1) {
+            const nearest = Math.min(...centroids.map((centroid) => 1 - dot(data[i], centroid)));
+            if (nearest > bestDistance) {
+              bestDistance = nearest;
+              bestIndex = i;
+            }
+          }
+          centroids.push(data[bestIndex].slice());
+        }
+        let ids = new Array(count).fill(0);
+        for (let iter = 0; iter < 35; iter += 1) {
+          let changed = false;
+          for (let i = 0; i < data.length; i += 1) {
+            let best = 0;
+            let bestDistance = Infinity;
+            for (let c = 0; c < centroids.length; c += 1) {
+              const distance = 1 - dot(data[i], centroids[c]);
+              if (distance < bestDistance) {
+                bestDistance = distance;
+                best = c;
+              }
+            }
+            if (ids[i] !== best) {
+              ids[i] = best;
+              changed = true;
+            }
+          }
+          const sums = Array.from({ length: k }, () => new Array(data[0].length).fill(0));
+          const counts = new Array(k).fill(0);
+          for (let i = 0; i < data.length; i += 1) {
+            counts[ids[i]] += 1;
+            for (let j = 0; j < data[i].length; j += 1) sums[ids[i]][j] += data[i][j];
+          }
+          for (let c = 0; c < k; c += 1) {
+            if (!counts[c]) continue;
+            centroids[c] = normalize(sums[c].map((value) => value / counts[c]));
+          }
+          if (!changed) break;
+        }
+        const counts = new Map();
+        for (const id of ids) counts.set(id, (counts.get(id) || 0) + 1);
+        const ordered = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+        const remap = new Map(ordered.map(([oldId], index) => [oldId, index]));
+        ids = ids.map((id) => remap.get(id));
+        const finalCounts = new Map();
+        for (const id of ids) finalCounts.set(id, (finalCounts.get(id) || 0) + 1);
+        return {
+          ids,
+          labels: [...finalCounts.entries()].sort((a, b) => a[0] - b[0]).map(([id, size]) => ({
+            id,
+            label: "Cluster " + (id + 1),
+            count: size,
+          })),
+        };
+      }
+      async function fitUmap(vectors, seed) {
+        if (!UMAPCtor || vectors.length < 5) return { coords: fallbackCoords(vectors), model: null, method: "fallback" };
+        const nNeighbors = clamp(Math.min(20, vectors.length - 1), 2, Math.max(2, vectors.length - 1));
+        const umap = new UMAPCtor({
+          nComponents: 2,
+          nNeighbors,
+          minDist: 0.15,
+          spread: 1,
+          distanceFn: cosineDistance,
+          random: mulberry32(seed || 42),
+        });
+        if (typeof umap.fitAsync === "function") {
+          const coords = await umap.fitAsync(vectors, (epoch) => {
+            if (epoch % 10 === 0) self.postMessage({ type: "progress", stage: "umap", epoch });
+            return true;
+          });
+          return { coords, model: umap, method: "fit" };
+        }
+        const epochs = umap.initializeFit(vectors);
+        for (let epoch = 0; epoch < epochs; epoch += 1) {
+          umap.step();
+          if (epoch % 10 === 0) self.postMessage({ type: "progress", stage: "umap", epoch, epochs });
+        }
+        return { coords: umap.getEmbedding(), model: umap, method: "fit" };
+      }
+      self.onmessage = async (event) => {
+        const message = event.data || {};
+        if (message.type !== "project") return;
+        try {
+          const vectors = message.vectors || [];
+          const hashes = message.hashes || [];
+          let coords = null;
+          let method = "fit";
+          const appendOnly = fitted && hashes.length >= fittedHashes.length
+            && fittedHashes.every((hash, index) => hashes[index] === hash);
+          if (appendOnly && hashes.length === fittedHashes.length) {
+            coords = fittedCoords;
+            method = "reuse";
+          } else if (appendOnly && fitted && typeof fitted.transform === "function") {
+            try {
+              const additions = vectors.slice(fittedHashes.length);
+              const addedCoords = fitted.transform(additions);
+              coords = fittedCoords.concat(addedCoords);
+              method = "transform";
+            } catch (error) {
+              coords = null;
+            }
+          }
+          if (!coords) {
+            const fittedResult = await fitUmap(vectors, message.seed || 42);
+            coords = fittedResult.coords;
+            fitted = fittedResult.model;
+            method = fittedResult.method;
+          }
+          fittedHashes = hashes.slice();
+          fittedCoords = coords.map((pair) => [Number(pair[0]) || 0, Number(pair[1]) || 0]);
+          const clusters = runKmeans(vectors);
+          self.postMessage({ type: "done", coords: fittedCoords, clusterIds: clusters.ids, clusters: clusters.labels, method });
+        } catch (error) {
+          self.postMessage({ type: "error", message: error && error.message ? error.message : String(error) });
+        }
+      };
+    `;
+  }
+
+  function ensureWorker() {
+    if (projectionWorker) return projectionWorker;
+    const blob = new Blob([workerSource()], { type: "text/javascript" });
+    projectionWorker = new Worker(URL.createObjectURL(blob));
+    return projectionWorker;
+  }
+
+  function project(vectors, records) {
+    const worker = ensureWorker();
+    const ticket = ++state.projectionTicket;
+    return new Promise((resolve, reject) => {
+      worker.onmessage = (event) => {
+        const message = event.data || {};
+        if (message.type === "progress") {
+          updateStatus({ newRows: Math.max(0, records.length - state.lastRowCount), project: `UMAP ${message.epoch}` });
+          if (!DATA) setLoading("Projecting map", `UMAP optimization epoch ${message.epoch}`, 58, true);
+        }
+        if (message.type === "done") {
+          if (ticket === state.projectionTicket) resolve(message);
+        }
+        if (message.type === "error") reject(new Error(message.message));
+      };
+      worker.onerror = (event) => reject(new Error(event.message || "Projection worker failed"));
+      worker.postMessage({
+        type: "project",
+        vectors,
+        hashes: records.map((record) => record.hash),
+        seed: 42,
+      });
+    });
+  }
+
+  function domains(rows) {
+    const xs = rows.map((row) => row.x).filter(Number.isFinite);
+    const ys = rows.map((row) => row.y).filter(Number.isFinite);
+    if (!xs.length || !ys.length) {
+      return { x: [-1, 1], y: [-1, 1] };
+    }
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const padX = Math.max(0.1, (maxX - minX) * 0.08);
+    const padY = Math.max(0.1, (maxY - minY) * 0.08);
+    return {
+      x: minX === maxX ? [minX - 1, maxX + 1] : [minX - padX, maxX + padX],
+      y: minY === maxY ? [minY - 1, maxY + 1] : [minY - padY, maxY + padY],
+    };
+  }
+
+  function previousQueuesByHash(previousRows) {
+    const queues = new Map();
+    for (const row of previousRows || []) {
+      if (!queues.has(row.hash)) queues.set(row.hash, []);
+      queues.get(row.hash).push(row);
+    }
+    return queues;
+  }
+
+  function consumePreviousRows(records, previousRows) {
+    const queues = previousQueuesByHash(previousRows);
+    return records.map((record) => {
+      const queue = queues.get(record.hash);
+      return queue && queue.length ? queue.shift() : null;
+    });
+  }
+
+  function alignCoordsToPrevious(records, coords, previousRows) {
+    const previousMatches = consumePreviousRows(records, previousRows);
+    const anchors = [];
+    for (let index = 0; index < records.length; index += 1) {
+      const previous = previousMatches[index];
+      const current = coords[index];
+      if (!previous || !current) continue;
+      anchors.push({
+        from: [Number(current[0]) || 0, Number(current[1]) || 0],
+        to: [Number(previous.x) || 0, Number(previous.y) || 0],
+      });
+    }
+
+    let aligned = coords.map((pair) => [Number(pair?.[0]) || 0, Number(pair?.[1]) || 0]);
+    if (anchors.length === 1) {
+      const dx = anchors[0].to[0] - anchors[0].from[0];
+      const dy = anchors[0].to[1] - anchors[0].from[1];
+      aligned = aligned.map(([x, y]) => [x + dx, y + dy]);
+    } else if (anchors.length > 1) {
+      const sourceMean = anchors.reduce((acc, anchor) => [acc[0] + anchor.from[0], acc[1] + anchor.from[1]], [0, 0]).map((value) => value / anchors.length);
+      const targetMean = anchors.reduce((acc, anchor) => [acc[0] + anchor.to[0], acc[1] + anchor.to[1]], [0, 0]).map((value) => value / anchors.length);
+      let a = 0;
+      let b = 0;
+      let denom = 0;
+      for (const anchor of anchors) {
+        const sx = anchor.from[0] - sourceMean[0];
+        const sy = anchor.from[1] - sourceMean[1];
+        const tx = anchor.to[0] - targetMean[0];
+        const ty = anchor.to[1] - targetMean[1];
+        a += sx * tx + sy * ty;
+        b += sx * ty - sy * tx;
+        denom += sx * sx + sy * sy;
+      }
+      const magnitude = Math.hypot(a, b);
+      if (denom > 1e-9 && magnitude > 1e-9) {
+        const scale = magnitude / denom;
+        const cos = a / magnitude;
+        const sin = b / magnitude;
+        aligned = aligned.map(([x, y]) => {
+          const sx = x - sourceMean[0];
+          const sy = y - sourceMean[1];
+          return [
+            targetMean[0] + scale * (cos * sx - sin * sy),
+            targetMean[1] + scale * (sin * sx + cos * sy),
+          ];
+        });
+      }
+    }
+
+    for (let index = 0; index < aligned.length; index += 1) {
+      const previous = previousMatches[index];
+      if (previous) aligned[index] = [previous.x, previous.y];
+    }
+    return {
+      coords: aligned,
+      anchorCount: anchors.length,
+      anchored: previousMatches.map(Boolean),
+    };
+  }
+
+  function stableDomains(rows, previousData, anchorCount) {
+    const fresh = domains(rows);
+    if (!previousData || !anchorCount) return fresh;
+    const keep = (previous, next) => {
+      if (!previous || previous.length !== 2 || previous.some((value) => !Number.isFinite(value))) return next;
+      return previous;
+    };
+    return {
+      x: keep(previousData.xDomain, fresh.x),
+      y: keep(previousData.yDomain, fresh.y),
+    };
+  }
+
+  function clampNewRowsToDomain(rows, anchored, domain) {
+    if (!domain || !domain.x || !domain.y) return;
+    const xPad = Math.max(1e-9, (domain.x[1] - domain.x[0]) * 0.035);
+    const yPad = Math.max(1e-9, (domain.y[1] - domain.y[0]) * 0.035);
+    for (let index = 0; index < rows.length; index += 1) {
+      if (anchored[index]) continue;
+      rows[index].x = clamp(rows[index].x, domain.x[0] + xPad, domain.x[1] - xPad);
+      rows[index].y = clamp(rows[index].y, domain.y[0] + yPad, domain.y[1] - yPad);
+    }
+  }
+
+  function vectorDot(left, right) {
+    if (!left || !right) return Number.NEGATIVE_INFINITY;
+    const count = Math.min(left.length, right.length);
+    let value = 0;
+    for (let index = 0; index < count; index += 1) value += left[index] * right[index];
+    return value;
+  }
+
+  function stableHashNumber(text) {
+    let hash = 2166136261;
+    for (let index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  function placeNewRowsNearNeighbors(rows, vectors, anchored, previousData, domain) {
+    const previousRows = (previousData?.rows || []).filter((row) => row.vector?.length);
+    if (!previousRows.length || !domain) return;
+    const xSpan = Math.max(1e-9, domain.x[1] - domain.x[0]);
+    const ySpan = Math.max(1e-9, domain.y[1] - domain.y[0]);
+    const baseJitter = Math.min(xSpan, ySpan) * 0.018;
+
+    for (let index = 0; index < rows.length; index += 1) {
+      if (anchored[index]) continue;
+      const vector = vectors[index];
+      if (!vector?.length) continue;
+      const neighbors = previousRows
+        .map((row) => ({ row, similarity: vectorDot(vector, row.vector) }))
+        .filter((item) => Number.isFinite(item.similarity))
+        .sort((left, right) => right.similarity - left.similarity)
+        .slice(0, 6);
+      if (!neighbors.length) continue;
+
+      const best = neighbors[0].similarity;
+      const second = neighbors[1]?.similarity ?? Number.NEGATIVE_INFINITY;
+      const seed = stableHashNumber(rows[index].id);
+      const angle = ((seed % 3600) / 3600) * Math.PI * 2;
+      const radius = baseJitter * (0.65 + (((seed >>> 8) % 1000) / 1000) * 0.7);
+      if (best >= 0.88 || best - second >= 0.04) {
+        rows[index].x = neighbors[0].row.x + Math.cos(angle) * radius;
+        rows[index].y = neighbors[0].row.y + Math.sin(angle) * radius;
+      } else {
+        let weightSum = 0;
+        let x = 0;
+        let y = 0;
+        for (const neighbor of neighbors) {
+          const weight = Math.exp((neighbor.similarity - best) * 22);
+          x += neighbor.row.x * weight;
+          y += neighbor.row.y * weight;
+          weightSum += weight;
+        }
+        if (!weightSum) continue;
+        rows[index].x = (x / weightSum) + Math.cos(angle) * radius;
+        rows[index].y = (y / weightSum) + Math.sin(angle) * radius;
+      }
+      rows[index].nearestLabel = neighbors[0].row.label;
+      rows[index].nearestSimilarity = best;
+    }
+  }
+
+  function buildData(columns, records, projectionResult, vectors = [], previousData = DATA) {
+    const clusterMap = new Map((projectionResult.clusters || []).map((cluster) => [cluster.id, cluster]));
+    const aligned = alignCoordsToPrevious(records, projectionResult.coords || [], previousData?.rows || []);
+    const rows = records.map((record, index) => {
+      const clusterId = projectionResult.clusterIds[index] ?? 0;
+      const clusterLabel = clusterMap.get(clusterId)?.label || `Cluster ${clusterId + 1}`;
+      const colors = {};
+      const filters = {};
+      for (const column of mapping.categoryColumns) {
+        colors[column] = record.raw[column] || "(blank)";
+        filters[column] = record.raw[column] || "(blank)";
+      }
+      colors.cluster = clusterLabel;
+      filters.cluster = clusterLabel;
+      return {
+        ...record,
+        x: Number(aligned.coords[index]?.[0]) || 0,
+        y: Number(aligned.coords[index]?.[1]) || 0,
+        vector: vectors[index] || null,
+        clusterId,
+        clusterLabel,
+        colors,
+        filters,
+      };
+    });
+    const timelineValues = rows.map((row) => row.timelineMs).filter((value) => value != null);
+    const domain = stableDomains(rows, previousData, aligned.anchorCount);
+    placeNewRowsNearNeighbors(rows, vectors, aligned.anchored, previousData, domain);
+    clampNewRowsToDomain(rows, aligned.anchored, domain);
+    return {
+      columns,
+      rows,
+      colorColumns,
+      filterColumns,
+      sortColumns: ["_row_index", mapping.timelineColumn, ...columns].filter((value, index, list) => value && list.indexOf(value) === index),
+      defaultSort: mapping.timelineColumn,
+      timelineColumn: mapping.timelineColumn,
+      timelineMin: timelineValues.length ? Math.min(...timelineValues) : null,
+      timelineMax: timelineValues.length ? Math.max(...timelineValues) : null,
+      xDomain: domain.x,
+      yDomain: domain.y,
+      anchorCount: aligned.anchorCount,
+      clusters: projectionResult.clusters || [],
+      sourceName: state.sourceMode === "sample" ? "sample.csv" : "Google Sheet",
+    };
+  }
+
+  async function refreshData({ manual = false } = {}) {
+    if (state.refreshing) return;
+    state.refreshing = true;
+    clearError();
+    updateStatus({ project: "fetch" });
+    if (!DATA) setLoading("Fetching rows", state.sourceMode === "sample" ? "Loading sample.csv" : "Loading published Google Sheet CSV", 8, true);
+    try {
+      const csvText = await fetchCsvText();
+      const { columns, records, skipped } = await prepareRecords(csvText);
+      if (!records.length) throw new Error(`No embeddable rows found${skipped ? ` (${skipped} skipped)` : ""}`);
+      const signature = records.map((record) => record.hash).join("|");
+      const rowDelta = Math.max(0, records.length - state.lastRowCount);
+      const wasFullTimeline = !DATA || (DATA.timelineMin === state.timelineMin && DATA.timelineMax === state.timelineMax);
+      if (signature === state.lastSignature && DATA) {
+        state.lastSuccessAt = new Date();
+        state.lastCsvText = csvText;
+        updateStatus({ newRows: 0, cacheHits: records.length, project: "reused" });
+        refreshScene({ syncUrl: false });
+        return;
+      }
+      if (!DATA) setLoading("Checking embedding cache", `${records.length} rows ready`, 18, true);
+      const embeddingResult = await embedRecords(records);
+      updateStatus({ newRows: rowDelta, cacheHits: embeddingResult.cacheHits, project: embeddingResult.preview ? "preview" : "project" });
+      if (!DATA) setLoading("Projecting map", "Running browser-native UMAP in a worker", 54, true);
+      const projectionResult = await project(embeddingResult.vectors, records);
+      const nextData = buildData(columns, records, projectionResult, embeddingResult.vectors);
+      DATA = nextData;
+      state.lastSuccessAt = new Date();
+      state.lastRowCount = records.length;
+      state.lastSignature = signature;
+      state.lastCsvText = csvText;
+      if (DATA.timelineMin != null && DATA.timelineMax != null) {
+        if (state.timelineMin == null || state.timelineMax == null || wasFullTimeline) {
+          state.timelineMin = DATA.timelineMin;
+          state.timelineMax = DATA.timelineMax;
+        } else {
+          state.timelineMin = clamp(state.timelineMin, DATA.timelineMin, DATA.timelineMax);
+          state.timelineMax = clamp(state.timelineMax, DATA.timelineMin, DATA.timelineMax);
+        }
+      }
+      buildDynamicControls();
+      applyUrlState();
+      syncControlsFromState();
+      resize();
+      refreshScene({ syncUrl: true });
+      updateStatus({ newRows: rowDelta, cacheHits: embeddingResult.cacheHits, project: projectionResult.method || "done" });
+      setLoading("Map ready", `${records.length} rows rendered`, 100, false);
+    } catch (error) {
+      const message = error?.message || String(error);
+      setError(message);
+      updateStatus({ project: "error" });
+      if (!DATA) setLoading("Map needs attention", message, 0, true);
+      else refreshScene({ syncUrl: false });
+      if (!state.apiKey && !state.previewVectors) showSettings();
+    } finally {
+      state.refreshing = false;
+    }
+  }
+
+  function matchesFilters(row) {
+    for (const [column, value] of Object.entries(state.filters)) {
+      if (value && String(row.filters[column] ?? "") !== value) return false;
+    }
+    return true;
+  }
+
+  function matchesSearch(row) {
+    const query = state.searchQuery.trim().toLowerCase();
+    if (!query) return true;
+    return [
+      row.label,
+      row.clusterLabel,
+      ...Object.values(row.raw || {}),
+      ...Object.values(row.tooltip || {}),
+    ].some((value) => String(value ?? "").toLowerCase().includes(query));
+  }
+
+  function inTimeline(row) {
+    if (!DATA?.timelineColumn || row.timelineMs == null) return !DATA?.timelineColumn;
+    return row.timelineMs >= state.timelineMin && row.timelineMs <= state.timelineMax;
+  }
+
+  function colorValue(row) {
+    return row.colors[state.colorBy] ?? "(blank)";
+  }
+
+  function colorScale() {
+    const values = [...new Set((DATA?.rows || []).map(colorValue))];
+    return d3.scaleOrdinal().domain(values).range(palette);
+  }
+
+  function sceneRows() {
+    if (!DATA) return { all: [], filtered: [], selectable: [] };
+    const filtered = DATA.rows.filter((row) => matchesFilters(row) && matchesSearch(row));
+    const selectable = DATA.timelineColumn ? filtered.filter((row) => row.timelineMs != null && inTimeline(row)) : filtered;
+    return { all: DATA.rows, filtered, selectable };
+  }
+
+  function updateSummary(scene) {
+    $("#rows-chip").innerHTML = DATA?.timelineColumn
+      ? `Rows <strong>${scene.selectable.length}/${scene.filtered.length}/${DATA.rows.length}</strong>`
+      : `Rows <strong>${scene.filtered.length}/${DATA?.rows.length ?? 0}</strong>`;
+  }
+
+  function rebuildSpatialIndex(scene) {
+    quadtree = d3.quadtree()
+      .x((row) => xScale(row.x))
+      .y((row) => yScale(row.y))
+      .addAll(scene.selectable);
+  }
+
+  function updateBarChart(scene) {
+    if (!DATA) return;
+    const counts = new Map();
+    for (const row of scene.selectable) {
+      const key = colorValue(row);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    const entries = [...counts.entries()]
+      .map(([key, count]) => ({ key, label: String(key), count }))
+      .sort((left, right) => d3.descending(left.count, right.count) || d3.ascending(left.label, right.label))
+      .slice(0, 20);
+    barChart.classList.remove("hidden");
+    if (!entries.length) {
+      barChartHead.innerHTML = `<span>Visible by ${escapeHtml(state.colorBy)}</span><span>0 categories</span>`;
+      barChartBody.html(`<div class="label">No visible rows</div>`);
+      return;
+    }
+    const totalCategories = counts.size;
+    const suffix = totalCategories > entries.length ? `Top ${entries.length} of ${totalCategories}` : `${entries.length} categories`;
+    barChartHead.innerHTML = `<span>Visible by ${escapeHtml(state.colorBy)}</span><span>${escapeHtml(suffix)}</span>`;
+    const maxCount = d3.max(entries, (entry) => entry.count) || 1;
+    const scale = colorScale();
+    const rows = barChartBody.selectAll(".bar-row").data(entries, (entry) => entry.key);
+    rows.exit().remove();
+    const enter = rows.enter().append("div").attr("class", "bar-row").attr("tabindex", "0");
+    enter.append("div").attr("class", "bar-label");
+    enter.append("div").attr("class", "bar-track").append("div").attr("class", "bar-fill");
+    enter.append("div").attr("class", "bar-count");
+    const merged = enter.merge(rows);
+    merged.select(".bar-label").text((entry) => entry.label).attr("title", (entry) => entry.label);
+    merged.select(".bar-fill")
+      .style("background", (entry) => scale(entry.key))
+      .style("width", (entry) => `${Math.max(2, (entry.count / maxCount) * 100)}%`);
+    merged.select(".bar-count").text((entry) => entry.count.toLocaleString());
+    merged.on("click", (event, entry) => {
+      if (!DATA.filterColumns.includes(state.colorBy)) return;
+      state.filters[state.colorBy] = state.filters[state.colorBy] === entry.key ? "" : entry.key;
+      buildFilterControls();
+      refreshScene();
+    });
+    merged.sort((left, right) => d3.descending(left.count, right.count) || d3.ascending(left.label, right.label));
+  }
+
+  function draw(scene = sceneRows()) {
+    if (!DATA) return;
+    const ctx = plot.getContext("2d");
+    ctx.clearRect(0, 0, width, height);
+    const scale = colorScale();
+    const activeIds = new Set(scene.selectable.map((row) => row.id));
+    const hasSelection = state.selectedIds.size > 0;
+    const inactive = inactiveOpacity();
+    for (let pass = 0; pass < 2; pass += 1) {
+      for (const row of scene.all) {
+        const active = activeIds.has(row.id);
+        const selected = state.selectedIds.has(row.id);
+        let alpha = active ? 0.94 : inactive;
+        if (hasSelection && !selected) alpha = inactive;
+        if (hasSelection && selected) alpha = 1;
+        const bright = alpha >= 0.35;
+        if (pass === 0 && bright) continue;
+        if (pass === 1 && !bright) continue;
+        const px = xScale(row.x);
+        const py = yScale(row.y);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = scale(colorValue(row));
+        ctx.beginPath();
+        ctx.arc(px, py, selected ? pointRadius + 2 : pointRadius, 0, Math.PI * 2);
+        ctx.fill();
+        if (selected) {
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue("--text").trim();
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+    updateSummary(scene);
+    rebuildSpatialIndex(scene);
+    updateBarChart(scene);
+  }
+
+  function resize() {
+    if (!DATA) return;
+    const rect = plot.parentElement.getBoundingClientRect();
+    width = rect.width;
+    height = rect.height;
+    dpr = window.devicePixelRatio || 1;
+    plot.width = Math.floor(width * dpr);
+    plot.height = Math.floor(height * dpr);
+    plot.style.width = `${width}px`;
+    plot.style.height = `${height}px`;
+    const ctx = plot.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    xDomain = DATA.xDomain;
+    yDomain = DATA.yDomain;
+    xScale = d3.scaleLinear().domain(xDomain).range([margin.left, width - margin.right]);
+    yScale = d3.scaleLinear().domain(yDomain).range([height - margin.bottom, margin.top]);
+    overlay.attr("width", width).attr("height", height);
+    refreshScene({ syncUrl: false });
+  }
+
+  function showTooltip(row, event) {
+    const fields = Object.entries(row.tooltip)
+      .map(([key, value]) => `<div class="tooltip-key">${escapeHtml(key)}</div><div class="tooltip-value">${escapeHtml(value)}</div>`)
+      .join("");
+    tooltip.innerHTML = `<div class="tooltip-label">${escapeHtml(row.label)}</div><div class="tooltip-grid">${fields}</div>`;
+    tooltip.style.display = "block";
+    tooltip.style.left = `${Math.max(12, Math.min(window.innerWidth - tooltip.offsetWidth - 12, event.clientX + 14))}px`;
+    tooltip.style.top = `${Math.max(12, Math.min(window.innerHeight - tooltip.offsetHeight - 12, event.clientY + 14))}px`;
+  }
+
+  function hideTooltip() {
+    tooltip.style.display = "none";
+  }
+
+  function comparator(left, right) {
+    const column = state.sortColumn;
+    const direction = state.sortAsc ? 1 : -1;
+    let a;
+    let b;
+    if (column === "_row_index") {
+      a = left.rowIndex;
+      b = right.rowIndex;
+    } else if (column === mapping.timelineColumn) {
+      a = left.timelineMs ?? Number.NEGATIVE_INFINITY;
+      b = right.timelineMs ?? Number.NEGATIVE_INFINITY;
+    } else {
+      a = String(left.raw[column] ?? "");
+      b = String(right.raw[column] ?? "");
+    }
+    if (a < b) return -1 * direction;
+    if (a > b) return 1 * direction;
+    return (left.rowIndex - right.rowIndex) * direction;
+  }
+
+  function selectedRows() {
+    if (!DATA) return [];
+    return DATA.rows.filter((row) => state.selectedIds.has(row.id)).sort(comparator);
+  }
+
+  function renderFieldGrid(row) {
+    return Object.entries(row.raw)
+      .map(([key, value]) => `<div class="field-key">${escapeHtml(key)}</div><div class="field-value">${escapeHtml(value)}</div>`)
+      .join("");
+  }
+
+  function renderTable(rows) {
+    const headers = DATA.columns.map((column) => {
+      const sorted = state.sortColumn === column;
+      const arrow = sorted ? (state.sortAsc ? " ^" : " v") : "";
+      return `<th data-sort="${escapeHtml(column)}" class="${sorted ? "sorted" : ""}">${escapeHtml(column)}${arrow}</th>`;
+    }).join("");
+    const body = rows.map((row) => {
+      const cells = DATA.columns.map((column) => `<td>${escapeHtml(row.raw[column] ?? "")}</td>`).join("");
+      return `<tr>${cells}</tr>`;
+    }).join("");
+    popupBody.innerHTML = `<table class="popup-table"><thead><tr>${headers}</tr></thead><tbody>${body}</tbody></table>`;
+  }
+
+  function renderCards(rows, grid) {
+    popupBody.innerHTML = `<div class="${grid ? "card-grid" : "card-list"}">${rows.map((row) => `
+      <article class="row-card">
+        <div class="row-card-head">
+          <div class="row-card-title">${escapeHtml(row.label)}</div>
+          <div class="row-card-subtitle">${escapeHtml(row.clusterLabel)}</div>
+        </div>
+        <div class="field-grid">${renderFieldGrid(row)}</div>
+      </article>
+    `).join("")}</div>`;
+  }
+
+  function hidePopupOnly() {
+    popup.classList.remove("visible");
+    popupBackdrop.classList.remove("visible");
+    popupBody.innerHTML = "";
+  }
+
+  function renderPopup() {
+    const rows = selectedRows();
+    if (!rows.length) {
+      hidePopupOnly();
+      return;
+    }
+    popupTitle.textContent = `${rows.length} row${rows.length === 1 ? "" : "s"} selected`;
+    if (state.popupStyle === "table") renderTable(rows);
+    else if (state.popupStyle === "grid") renderCards(rows, true);
+    else renderCards(rows, false);
+    for (const button of $("#popup-style-group").querySelectorAll("button")) {
+      button.classList.toggle("active", button.dataset.popupStyle === state.popupStyle);
+    }
+    hideTooltip();
+    popup.classList.add("visible");
+    popupBackdrop.classList.add("visible");
+  }
+
+  function dismissPopup({ clearSelection = true, redraw = true } = {}) {
+    hidePopupOnly();
+    if (clearSelection) state.selectedIds = new Set();
+    clearSelectionBox();
+    hideTooltip();
+    if (redraw) draw(sceneRows());
+  }
+
+  function syncSelectionToVisible(scene) {
+    if (!state.selectedIds.size) return;
+    const allowed = new Set(scene.selectable.map((row) => row.id));
+    state.selectedIds = new Set([...state.selectedIds].filter((id) => allowed.has(id)));
+  }
+
+  function refreshScene({ scene = sceneRows(), syncUrl = true } = {}) {
+    if (!DATA) return;
+    syncSelectionToVisible(scene);
+    draw(scene);
+    if (state.selectedIds.size) renderPopup();
+    else hidePopupOnly();
+    syncTimelineUi();
+    if (syncUrl) syncUrlState();
+  }
+
+  function buildColorControls() {
+    const group = $("#color-group");
+    group.innerHTML = colorColumns.map((column) => (
+      `<button type="button" data-color="${escapeHtml(column)}" class="${column === state.colorBy ? "active" : ""}">${escapeHtml(column)}</button>`
+    )).join("");
+    group.onclick = (event) => {
+      const button = event.target.closest("[data-color]");
+      if (!button) return;
+      state.colorBy = button.dataset.color;
+      buildColorControls();
+      refreshScene();
+    };
+  }
+
+  function buildFilterControls() {
+    const container = $("#filter-group");
+    if (!DATA) {
+      container.innerHTML = "";
+      return;
+    }
+    container.innerHTML = filterColumns.map((column) => {
+      const values = [...new Set(DATA.rows.map((row) => String(row.filters[column] ?? "(blank)")))].sort();
+      const options = [`<option value="">All ${escapeHtml(column)}</option>`]
+        .concat(values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`))
+        .join("");
+      return `<select data-filter="${escapeHtml(column)}">${options}</select>`;
+    }).join("");
+    for (const select of container.querySelectorAll("select")) {
+      select.value = state.filters[select.dataset.filter] || "";
+      select.onchange = (event) => {
+        state.filters[event.target.dataset.filter] = event.target.value;
+        refreshScene();
+      };
+    }
+  }
+
+  function buildSortControls() {
+    const select = $("#sort-column");
+    if (!DATA) return;
+    select.innerHTML = DATA.sortColumns.map((column) => (
+      `<option value="${escapeHtml(column)}">${escapeHtml(column === "_row_index" ? "Row order" : column)}</option>`
+    )).join("");
+    if (!DATA.sortColumns.includes(state.sortColumn)) state.sortColumn = DATA.defaultSort;
+    select.value = state.sortColumn;
+    $("#sort-direction").textContent = state.sortAsc ? "Ascending" : "Descending";
+  }
+
+  function buildDynamicControls() {
+    buildColorControls();
+    buildFilterControls();
+    buildSortControls();
+    buildTimelineControls();
+  }
+
+  function syncControlsFromState() {
+    $("#source-mode").value = state.sourceMode;
+    $("#sheet-id").value = state.sheetId;
+    $("#sheet-gid").value = state.gid;
+    $("#control-search").value = state.searchQuery;
+    buildColorControls();
+    buildFilterControls();
+    buildSortControls();
+    for (const button of $("#popup-style-group").querySelectorAll("button")) {
+      button.classList.toggle("active", button.dataset.popupStyle === state.popupStyle);
+    }
+    syncTimelineUi();
+    syncPlaybackControls();
+    updateStatus();
+  }
+
+  function syncTimelineUi() {
+    if (!DATA || DATA.timelineMin == null || DATA.timelineMax == null) return;
+    const minInput = $("#timeline-min");
+    const maxInput = $("#timeline-max");
+    const start = msToSlider(state.timelineMin);
+    const end = msToSlider(state.timelineMax);
+    minInput.value = String(start);
+    maxInput.value = String(end);
+    $("#timeline-start").textContent = formatTimeline(state.timelineMin);
+    $("#timeline-end").textContent = formatTimeline(state.timelineMax);
+    $("#timeline-duration").textContent = formatDuration(state.timelineMin, state.timelineMax);
+    $("#timeline-duration").style.left = `${((start + end) / 2 / sliderMax) * 100}%`;
+    $("#timeline-fill").style.left = `${(start / sliderMax) * 100}%`;
+    $("#timeline-fill").style.width = `${((end - start) / sliderMax) * 100}%`;
+  }
+
+  function syncPlaybackControls() {
+    const cumulativeButton = $("#timeline-cumulative");
+    const cumulative = state.playbackMode === "slide" ? false : true;
+    cumulativeButton.classList.toggle("active", cumulative);
+    cumulativeButton.setAttribute("aria-pressed", String(cumulative));
+    $("#timeline-speed").value = String(durationToSpeedSlider(state.playDurationMs));
+    $("#timeline-speed-value").textContent = formatPlaybackDuration(state.playDurationMs);
+    $("#timeline-inactive-opacity").value = String(opacityToSlider(inactiveOpacity()));
+    $("#timeline-inactive-opacity-value").textContent = `${Math.round(inactiveOpacity() * 100)}%`;
+  }
+
+  function pausePlay() {
+    state.playing = false;
+    $("#timeline-play").textContent = "Play";
+    $("#timeline-play").classList.remove("active");
+    cancelAnimationFrame(playRaf);
+  }
+
+  function stepPlay(timestamp) {
+    if (!state.playing || !DATA) return;
+    if (playPrev == null) playPrev = timestamp;
+    const delta = timestamp - playPrev;
+    playPrev = timestamp;
+    const windowSize = state.timelineMax - state.timelineMin;
+    const fullRange = Math.max(1, DATA.timelineMax - DATA.timelineMin);
+    state.timelineMax = Math.min(DATA.timelineMax, state.timelineMax + (delta * fullRange) / state.playDurationMs);
+    if (state.playbackMode === "slide") {
+      state.timelineMin = Math.max(DATA.timelineMin, state.timelineMax - windowSize);
+    }
+    syncTimelineUi();
+    refreshScene();
+    if (state.timelineMax >= DATA.timelineMax) {
+      pausePlay();
+      return;
+    }
+    playRaf = requestAnimationFrame(stepPlay);
+  }
+
+  function startPlay() {
+    if (!DATA || DATA.timelineMin == null || DATA.timelineMax == null) return;
+    const fullRange = Math.max(1, DATA.timelineMax - DATA.timelineMin);
+    let windowSize = state.timelineMax - state.timelineMin;
+    if (windowSize >= fullRange * 0.999) {
+      windowSize = Math.max(fullRange * 0.18, fullRange / Math.min(12, Math.max(2, DATA.rows.length)));
+      state.timelineMin = DATA.timelineMin;
+      state.timelineMax = Math.min(DATA.timelineMax, DATA.timelineMin + windowSize);
+    } else if (state.timelineMax >= DATA.timelineMax) {
+      state.timelineMin = DATA.timelineMin;
+      state.timelineMax = Math.min(DATA.timelineMax, DATA.timelineMin + windowSize);
+    }
+    state.playing = true;
+    playPrev = null;
+    $("#timeline-play").textContent = "Pause";
+    $("#timeline-play").classList.add("active");
+    playRaf = requestAnimationFrame(stepPlay);
+  }
+
+  function buildTimelineControls() {
+    if (!DATA || DATA.timelineMin == null || DATA.timelineMax == null) {
+      $("#timeline-bar").classList.remove("visible");
+      return;
+    }
+    $("#timeline-bar").classList.add("visible");
+    const minInput = $("#timeline-min");
+    const maxInput = $("#timeline-max");
+    minInput.min = "0";
+    minInput.max = String(sliderMax);
+    maxInput.min = "0";
+    maxInput.max = String(sliderMax);
+    syncTimelineUi();
+    syncPlaybackControls();
+  }
+
+  function pointerPosition(event) {
+    const rect = plot.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
+      y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)),
+    };
+  }
+
+  function updateSelectionBox() {
+    if (!dragState) return;
+    const x = Math.min(dragState.startX, dragState.currentX);
+    const y = Math.min(dragState.startY, dragState.currentY);
+    const w = Math.abs(dragState.currentX - dragState.startX);
+    const h = Math.abs(dragState.currentY - dragState.startY);
+    selectionBox.attr("x", x).attr("y", y).attr("width", w).attr("height", h).style("display", "block");
+  }
+
+  function clearSelectionBox() {
+    selectionBox.style("display", "none");
+    dragState = null;
+  }
+
+  function handlePointClick(event) {
+    if (!quadtree) return;
+    const { x, y } = pointerPosition(event);
+    const found = quadtree.find(x, y, 12);
+    if (!found) {
+      dismissPopup();
+      return;
+    }
+    if (event.shiftKey && state.selectedIds.has(found.id)) state.selectedIds.delete(found.id);
+    else if (event.shiftKey) state.selectedIds.add(found.id);
+    else state.selectedIds = new Set([found.id]);
+    draw(sceneRows());
+    renderPopup();
+  }
+
+  function handleBrushSelection(bounds) {
+    const scene = sceneRows();
+    const selected = scene.selectable
+      .filter((row) => {
+        const px = xScale(row.x);
+        const py = yScale(row.y);
+        return px >= bounds.x0 && px <= bounds.x1 && py >= bounds.y0 && py <= bounds.y1;
+      })
+      .map((row) => row.id);
+    state.selectedIds = new Set(selected);
+    clearSelectionBox();
+    draw(scene);
+    if (selected.length) renderPopup();
+    else hidePopupOnly();
+  }
+
+  function showSettings() {
+    $("#api-key-input").value = state.apiKey || "";
+    $("#preview-vectors").checked = state.previewVectors;
+    $("#settings-backdrop").classList.add("visible");
+    $("#settings-modal").classList.add("visible");
+    setTimeout(() => $("#api-key-input").focus(), 0);
+  }
+
+  function hideSettings() {
+    $("#settings-backdrop").classList.remove("visible");
+    $("#settings-modal").classList.remove("visible");
+  }
+
+  function bindUi() {
+    $("#source-mode").onchange = (event) => {
+      state.sourceMode = event.target.value;
+      state.lastSignature = "";
+      pausePlay();
+      syncUrlState();
+      refreshData({ manual: true });
+    };
+    $("#sheet-id").onchange = (event) => {
+      state.sheetId = event.target.value.trim() || DEFAULT_SHEET_ID;
+      state.lastSignature = "";
+      refreshData({ manual: true });
+    };
+    $("#sheet-gid").onchange = (event) => {
+      state.gid = event.target.value.trim() || DEFAULT_GID;
+      state.lastSignature = "";
+      refreshData({ manual: true });
+    };
+    $("#refresh-btn").onclick = () => refreshData({ manual: true });
+    $("#pause-btn").onclick = () => {
+      state.paused = !state.paused;
+      updateStatus();
+      syncUrlState();
+    };
+    $("#key-btn").onclick = showSettings;
+    $("#theme-btn").onclick = () => {
+      const next = document.body.dataset.theme === "light" ? "dark" : "light";
+      document.body.dataset.theme = next;
+      localStorage.setItem(THEME_STORAGE, next);
+      draw(sceneRows());
+    };
+    $("#control-search").oninput = (event) => {
+      state.searchQuery = event.target.value;
+      refreshScene();
+    };
+    $("#popup-close").onclick = () => dismissPopup();
+    popupBackdrop.onclick = () => dismissPopup();
+    popupBody.onclick = (event) => {
+      const header = event.target.closest("th[data-sort]");
+      if (!header || state.popupStyle !== "table") return;
+      if (state.sortColumn === header.dataset.sort) state.sortAsc = !state.sortAsc;
+      else {
+        state.sortColumn = header.dataset.sort;
+        state.sortAsc = true;
+      }
+      buildSortControls();
+      renderPopup();
+      syncUrlState();
+    };
+    $("#sort-column").onchange = (event) => {
+      state.sortColumn = event.target.value;
+      renderPopup();
+      syncUrlState();
+    };
+    $("#sort-direction").onclick = () => {
+      state.sortAsc = !state.sortAsc;
+      buildSortControls();
+      renderPopup();
+      syncUrlState();
+    };
+    $("#popup-style-group").onclick = (event) => {
+      const button = event.target.closest("[data-popup-style]");
+      if (!button) return;
+      state.popupStyle = button.dataset.popupStyle;
+      renderPopup();
+      syncUrlState();
+    };
+    $("#settings-close").onclick = hideSettings;
+    $("#settings-backdrop").onclick = hideSettings;
+    $("#save-key-btn").onclick = () => {
+      state.apiKey = $("#api-key-input").value.trim();
+      state.previewVectors = $("#preview-vectors").checked;
+      if (state.apiKey) localStorage.setItem(KEY_STORAGE, state.apiKey);
+      else localStorage.removeItem(KEY_STORAGE);
+      localStorage.setItem(PREVIEW_STORAGE, state.previewVectors ? "1" : "0");
+      state.lastSignature = "";
+      hideSettings();
+      refreshData({ manual: true });
+    };
+    $("#clear-key-btn").onclick = () => {
+      state.apiKey = "";
+      localStorage.removeItem(KEY_STORAGE);
+      $("#api-key-input").value = "";
+    };
+    $("#timeline-play").onclick = () => {
+      if (state.playing) pausePlay();
+      else startPlay();
+    };
+    $("#timeline-cumulative").onclick = () => {
+      pausePlay();
+      state.playbackMode = state.playbackMode === "reveal" ? "slide" : "reveal";
+      syncPlaybackControls();
+      syncUrlState();
+    };
+    $("#timeline-speed").oninput = (event) => {
+      state.playDurationMs = speedSliderToDuration(event.target.value);
+      syncPlaybackControls();
+      syncUrlState();
+    };
+    $("#timeline-inactive-opacity").oninput = (event) => {
+      state.inactiveOpacity = sliderToOpacity(event.target.value);
+      syncPlaybackControls();
+      refreshScene();
+    };
+    $("#timeline-min").oninput = (event) => {
+      pausePlay();
+      const maxInput = $("#timeline-max");
+      const next = Math.min(Number(event.target.value), Number(maxInput.value) - 100);
+      event.target.value = String(next);
+      state.timelineMin = sliderToMs(next);
+      refreshScene();
+    };
+    $("#timeline-max").oninput = (event) => {
+      pausePlay();
+      const minInput = $("#timeline-min");
+      const next = Math.max(Number(event.target.value), Number(minInput.value) + 100);
+      event.target.value = String(next);
+      state.timelineMax = sliderToMs(next);
+      refreshScene();
+    };
+    let rangeDrag = null;
+    const timelineFill = $("#timeline-fill");
+    timelineFill.onpointerdown = (event) => {
+      if (event.button !== 0 || !DATA) return;
+      pausePlay();
+      rangeDrag = {
+        pointerId: event.pointerId,
+        rect: $("#timeline-range").getBoundingClientRect(),
+        anchorX: event.clientX,
+        startMin: state.timelineMin,
+        startMax: state.timelineMax,
+      };
+      timelineFill.setPointerCapture?.(event.pointerId);
+    };
+    timelineFill.onpointermove = (event) => {
+      if (!rangeDrag || event.pointerId !== rangeDrag.pointerId || !DATA) return;
+      const delta = ((event.clientX - rangeDrag.anchorX) / rangeDrag.rect.width) * (DATA.timelineMax - DATA.timelineMin);
+      const windowSize = rangeDrag.startMax - rangeDrag.startMin;
+      let nextMin = rangeDrag.startMin + delta;
+      let nextMax = rangeDrag.startMax + delta;
+      if (nextMin < DATA.timelineMin) {
+        nextMin = DATA.timelineMin;
+        nextMax = DATA.timelineMin + windowSize;
+      }
+      if (nextMax > DATA.timelineMax) {
+        nextMax = DATA.timelineMax;
+        nextMin = DATA.timelineMax - windowSize;
+      }
+      state.timelineMin = nextMin;
+      state.timelineMax = nextMax;
+      refreshScene();
+    };
+    timelineFill.onpointerup = timelineFill.onpointercancel = (event) => {
+      if (!rangeDrag || event.pointerId !== rangeDrag.pointerId) return;
+      timelineFill.releasePointerCapture?.(event.pointerId);
+      rangeDrag = null;
+    };
+    overlayNode.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0 || state.playing) return;
+      const { x, y } = pointerPosition(event);
+      dragState = { startX: x, startY: y, currentX: x, currentY: y, moved: false };
+      overlayNode.setPointerCapture?.(event.pointerId);
+      hideTooltip();
+    });
+    overlayNode.addEventListener("pointermove", (event) => {
+      if (dragState) {
+        const { x, y } = pointerPosition(event);
+        dragState.currentX = x;
+        dragState.currentY = y;
+        dragState.moved = dragState.moved || Math.abs(x - dragState.startX) > 4 || Math.abs(y - dragState.startY) > 4;
+        if (dragState.moved) updateSelectionBox();
+        return;
+      }
+      if (state.playing || event.buttons > 0 || !quadtree) {
+        hideTooltip();
+        return;
+      }
+      const { x, y } = pointerPosition(event);
+      const found = quadtree.find(x, y, 12);
+      if (found) showTooltip(found, event);
+      else hideTooltip();
+    });
+    overlayNode.addEventListener("pointerup", (event) => {
+      if (!dragState) return;
+      overlayNode.releasePointerCapture?.(event.pointerId);
+      const finished = dragState;
+      if (!finished.moved) {
+        clearSelectionBox();
+        handlePointClick(event);
+        return;
+      }
+      const x0 = Math.min(finished.startX, finished.currentX);
+      const y0 = Math.min(finished.startY, finished.currentY);
+      const x1 = Math.max(finished.startX, finished.currentX);
+      const y1 = Math.max(finished.startY, finished.currentY);
+      if (x1 - x0 < 4 || y1 - y0 < 4) {
+        clearSelectionBox();
+        handlePointClick(event);
+      } else {
+        handleBrushSelection({ x0, y0, x1, y1 });
+      }
+    });
+    overlayNode.addEventListener("pointerleave", () => {
+      if (!dragState) hideTooltip();
+    });
+    overlayNode.addEventListener("pointercancel", () => {
+      clearSelectionBox();
+      hideTooltip();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        hideSettings();
+        dismissPopup();
+      }
+    });
+  }
+
+  function startPolling() {
+    clearInterval(pollTimer);
+    pollTimer = setInterval(() => {
+      if (!state.paused && !state.refreshing) refreshData();
+    }, POLL_MS);
+  }
+
+  function boot() {
+    const storedTheme = localStorage.getItem(THEME_STORAGE);
+    if (storedTheme === "light" || storedTheme === "dark") document.body.dataset.theme = storedTheme;
+    applyUrlState();
+    bindUi();
+    syncControlsFromState();
+    if (!state.apiKey && !state.previewVectors) showSettings();
+    refreshData();
+    startPolling();
+    setInterval(updateClockStatus, 1000);
+  }
+
+  window.addEventListener("resize", resize);
+  window.addEventListener("popstate", () => {
+    applyUrlState();
+    syncControlsFromState();
+    refreshScene({ syncUrl: false });
+  });
+
+  globalThis.__liveEmbedumap = {
+    state,
+    refresh: refreshData,
+    usePreview(value = true) {
+      state.previewVectors = Boolean(value);
+      localStorage.setItem(PREVIEW_STORAGE, state.previewVectors ? "1" : "0");
+      state.lastSignature = "";
+      return refreshData({ manual: true });
+    },
+    data: () => DATA,
+  };
+
+  requestAnimationFrame(boot);
+})();
+</script>
+</body>
+</html>
