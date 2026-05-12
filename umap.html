@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -84,14 +83,73 @@
   #controls, #timeline-bar {
     position: relative;
     z-index: 4;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
     padding: 10px 12px;
     background: var(--panel);
     border-bottom: 1px solid var(--line);
     backdrop-filter: blur(18px);
+  }
+
+  #controls {
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: 9px;
+  }
+
+  #controls.header-minimized {
+    gap: 0;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  #controls.header-minimized .topbar-secondary {
+    display: none;
+  }
+
+  .topbar-primary,
+  .topbar-secondary {
+    display: grid;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-primary {
+    grid-template-columns: minmax(150px, 200px) minmax(210px, 250px) minmax(112px, 130px) minmax(178px, auto) minmax(480px, 1fr);
+  }
+
+  .topbar-secondary {
+    grid-template-columns: minmax(260px, 0.65fr) minmax(280px, 1fr) minmax(340px, 1.45fr);
+  }
+
+  .source-controls,
+  .search-controls,
+  .field-control-row,
+  .poll-controls,
+  .icon-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+  }
+
+  .field-control-row .button-group {
+    min-width: 0;
+  }
+
+  .field-control-row select {
+    max-width: 220px;
+    min-width: 120px;
+  }
+
+  .icon-actions {
+    justify-content: flex-end;
+    position: relative;
+    z-index: 1;
+  }
+
+  .source-controls input,
+  .search-controls input {
+    min-width: 0;
+    flex: 1 1 auto;
   }
 
   #timeline-bar {
@@ -133,6 +191,13 @@
     display: inline-flex;
     flex-wrap: wrap;
     gap: 6px;
+  }
+
+  .button-group button {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   button, select, input[type="search"], input[type="text"], input[type="password"] {
@@ -177,12 +242,33 @@
   }
 
   #control-search {
-    width: clamp(150px, 16vw, 260px);
+    width: 100%;
   }
 
-  #source-mode { width: 128px; }
-  #sheet-id { width: 260px; }
-  #sheet-gid { width: 112px; }
+  #source-mode { width: 120px; flex: 0 0 auto; }
+  #sheet-url { width: 100%; }
+  #poll-seconds { width: 58px; text-align: right; }
+
+  .poll-suffix {
+    color: var(--faint);
+    font-size: 0.74rem;
+  }
+
+  .icon-button {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 34px;
+  }
+
+  .icon-button svg {
+    width: 17px;
+    height: 17px;
+    pointer-events: none;
+  }
 
   select:focus-visible, button:focus-visible, input:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--accent) 72%, transparent);
@@ -195,19 +281,26 @@
   }
 
   #status-stack {
-    margin-left: auto;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 6px;
-    flex-wrap: wrap;
-    max-width: min(760px, 52vw);
+    flex-wrap: nowrap;
+    min-width: 0;
+    min-height: 34px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    padding-bottom: 1px;
+    scrollbar-width: thin;
   }
 
   .chip {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
+    flex: 0 0 auto;
     min-height: 24px;
     padding: 3px 7px;
     color: var(--muted);
@@ -215,13 +308,53 @@
     border: 1px solid var(--line);
     border-radius: 6px;
     font-size: 0.72rem;
+    line-height: 1;
     white-space: nowrap;
   }
 
-  .chip strong { color: var(--text); font-weight: 700; }
+  #rows-chip { min-width: 92px; }
+  #new-chip,
+  #cache-chip { min-width: 66px; }
+  #project-chip { min-width: 96px; }
+  #last-chip { min-width: 112px; }
+
+  .chip strong {
+    display: inline-block;
+    color: var(--text);
+    font-weight: 700;
+    line-height: 1;
+  }
   .chip.good { border-color: color-mix(in srgb, var(--good) 44%, transparent); }
   .chip.warn { border-color: color-mix(in srgb, var(--warn) 54%, transparent); color: color-mix(in srgb, var(--warn) 86%, var(--text)); }
   .chip.bad { border-color: color-mix(in srgb, var(--bad) 58%, transparent); color: #ffd5cf; }
+
+  .status-error {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    min-height: 34px;
+    padding: 8px 10px;
+    color: #ffdcd7;
+    background: color-mix(in srgb, var(--bad) 16%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--bad) 46%, transparent);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+
+  .status-error strong {
+    color: #ffe8e4;
+    text-transform: uppercase;
+    font-size: 0.66rem;
+    letter-spacing: 0;
+    padding-top: 2px;
+  }
+
+  .status-error span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
 
   #plot-wrap {
     position: relative;
@@ -275,6 +408,17 @@
     border: 1px solid var(--line);
     border-radius: 8px;
     box-shadow: var(--shadow);
+  }
+
+  .columns-card {
+    width: min(1060px, 94vw);
+    max-height: calc(100dvh - 40px);
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .sheet-card {
+    width: min(680px, 92vw);
   }
 
   .loading-head {
@@ -332,13 +476,62 @@
 
   #bar-chart.hidden { display: none; }
 
+  #bar-chart.collapsed {
+    width: 34px;
+    gap: 0;
+  }
+
+  #bar-chart.collapsed .bar-chart-head,
+  #bar-chart.collapsed .bar-chart-body {
+    display: none;
+  }
+
+  #bar-chart.collapsed .bar-chart-shell-head {
+    justify-content: center;
+    padding: 0;
+    background: transparent;
+    border: 0;
+  }
+
+  .bar-chart-shell-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 8px;
+    background: color-mix(in srgb, var(--panel) 86%, transparent);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    backdrop-filter: blur(12px);
+  }
+
   .bar-chart-head {
     display: flex;
     justify-content: space-between;
     gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
     color: var(--muted);
     font-size: 0.7rem;
     text-transform: uppercase;
+  }
+
+  .sidebar-toggle {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+  }
+
+  .sidebar-toggle svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .bar-chart-head span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .bar-chart-body {
@@ -503,21 +696,46 @@
   }
 
   .tooltip-label {
+    overflow: hidden;
     font-weight: 800;
     margin-bottom: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .tooltip-grid, .field-grid {
+  .tooltip-grid,
+  .field-grid {
     display: grid;
-    grid-template-columns: minmax(110px, auto) 1fr;
     gap: 6px 10px;
     font-size: 0.78rem;
   }
 
-  .tooltip-key, .field-key { color: var(--accent); }
-  .tooltip-value, .field-value { color: var(--text); word-break: break-word; }
+  .tooltip-grid {
+    grid-template-columns: minmax(78px, 32%) minmax(0, 1fr);
+  }
 
-  #popup-backdrop, #settings-backdrop {
+  .field-grid {
+    grid-template-columns: minmax(96px, 28%) minmax(0, 1fr);
+  }
+
+  .tooltip-key,
+  .field-key {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--accent);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tooltip-value,
+  .field-value {
+    min-width: 0;
+    color: var(--text);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  #popup-backdrop, #sheet-backdrop, #settings-backdrop, #columns-backdrop {
     position: fixed;
     inset: 0;
     z-index: 100;
@@ -539,7 +757,7 @@
     box-shadow: var(--shadow);
   }
 
-  #settings-modal {
+  #sheet-modal, #settings-modal, #columns-modal {
     position: fixed;
     inset: 0;
     z-index: 150;
@@ -548,9 +766,9 @@
     padding: 20px;
   }
 
-  #popup.visible, #popup-backdrop.visible, #settings-backdrop.visible { display: block; }
+  #popup.visible, #popup-backdrop.visible, #sheet-backdrop.visible, #settings-backdrop.visible, #columns-backdrop.visible { display: block; }
   #popup.visible { display: grid; }
-  #settings-modal.visible { display: grid; }
+  #sheet-modal.visible, #settings-modal.visible, #columns-modal.visible { display: grid; }
 
   .popup-head, .toolbar, .modal-head, .modal-actions {
     display: flex;
@@ -565,7 +783,15 @@
   .modal-actions { border-top: 1px solid var(--line); border-bottom: 0; justify-content: flex-end; padding: 0; padding-top: 12px; }
 
   .popup-title, .modal-title {
+    min-width: 0;
+    overflow: hidden;
     font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .toolbar select {
+    max-width: min(360px, 38vw);
   }
 
   .close-button {
@@ -584,7 +810,9 @@
 
   .popup-table {
     width: 100%;
+    min-width: max(100%, calc(var(--column-count, 1) * 180px));
     border-collapse: collapse;
+    table-layout: fixed;
   }
 
   .popup-table th, .popup-table td {
@@ -593,6 +821,7 @@
     text-align: left;
     vertical-align: top;
     font-size: 0.78rem;
+    width: 180px;
   }
 
   .popup-table th {
@@ -608,6 +837,25 @@
     color: var(--text);
   }
 
+  .table-heading,
+  .table-cell {
+    display: block;
+    min-width: 0;
+  }
+
+  .table-heading {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .table-cell {
+    max-height: 8.4em;
+    overflow: auto;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
   .card-grid, .card-list {
     display: grid;
     gap: 10px;
@@ -620,6 +868,8 @@
   .row-card {
     display: grid;
     gap: 9px;
+    min-width: 0;
+    overflow: hidden;
     padding: 11px;
     background: var(--chip);
     border: 1px solid var(--line);
@@ -631,14 +881,46 @@
     justify-content: space-between;
     gap: 8px;
     align-items: baseline;
+    min-width: 0;
   }
 
-  .row-card-title { font-weight: 800; }
-  .row-card-subtitle { color: var(--muted); font-size: 0.76rem; }
+  .row-card-title {
+    min-width: 0;
+    overflow: hidden;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .row-card-subtitle {
+    flex: 0 1 auto;
+    max-width: 44%;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 0.76rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
   .settings-form {
     display: grid;
     gap: 10px;
+  }
+
+  .columns-card .settings-form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: auto;
+    padding-right: 4px;
+    scrollbar-gutter: stable;
+  }
+
+  .columns-card .settings-help,
+  .columns-card .columns-toolbar,
+  .columns-card .columns-grid,
+  .columns-card .modal-actions {
+    flex: 0 0 auto;
   }
 
   .settings-row {
@@ -646,6 +928,10 @@
     grid-template-columns: 128px 1fr;
     gap: 8px;
     align-items: center;
+  }
+
+  .sheet-url-row {
+    grid-template-columns: 88px minmax(0, 1fr);
   }
 
   .settings-row input[type="checkbox"] {
@@ -659,51 +945,248 @@
     font-size: 0.86rem;
   }
 
+  .columns-grid {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.36fr) minmax(520px, 1fr);
+    gap: 12px;
+    align-items: start;
+    min-height: 0;
+  }
+
+  .column-panel {
+    display: grid;
+    gap: 8px;
+    min-height: 0;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--chip);
+  }
+
+  .column-panel-head {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .column-panel-copy {
+    margin: 3px 0 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .column-tools,
+  .columns-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+
+  .columns-toolbar {
+    justify-content: space-between;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--chip) 82%, transparent);
+  }
+
+  #column-search {
+    min-width: 280px;
+    flex: 1 1 360px;
+  }
+
+  #columns-summary {
+    color: var(--muted);
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  .mapping-selects {
+    display: grid;
+    gap: 10px;
+  }
+
+  .mapping-selects label {
+    display: grid;
+    gap: 5px;
+  }
+
+  .column-map-panel {
+    min-height: min(58vh, 620px);
+  }
+
+  .column-map-list {
+    display: grid;
+    max-height: min(58vh, 620px);
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--bg) 20%, transparent);
+  }
+
+  .column-map-head,
+  .column-map-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 58px 58px 58px;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .column-map-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    min-height: 34px;
+    padding: 7px 9px;
+    color: var(--faint);
+    background: var(--panel-strong);
+    border-bottom: 1px solid var(--line);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+  }
+
+  .column-map-row {
+    min-height: 34px;
+    padding: 6px 9px;
+    color: var(--text);
+    border-bottom: 1px solid var(--line);
+    font-size: 0.82rem;
+  }
+
+  .column-map-row:last-child {
+    border-bottom: 0;
+  }
+
+  .column-map-row:hover {
+    background: rgba(255, 255, 255, 0.055);
+  }
+
+  .column-map-name {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .column-check {
+    display: grid;
+    place-items: center;
+  }
+
+  .column-check input {
+    width: 16px;
+    height: 16px;
+  }
+
+  .columns-card .modal-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin: 0 -4px 0 0;
+    padding: 12px 0 0;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--panel-strong) 10%, transparent),
+      var(--panel-strong) 34%
+    );
+  }
+
+  .column-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .column-kind {
+    color: var(--faint);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 2px 5px;
+    font-size: 0.64rem;
+    text-transform: uppercase;
+  }
+
+  .column-panel select {
+    width: 100%;
+  }
+
   .hidden { display: none !important; }
 
   @media (max-width: 1050px) {
+    .topbar-primary,
+    .topbar-secondary {
+      grid-template-columns: 1fr;
+    }
+
     #status-stack {
       max-width: 100%;
       margin-left: 0;
       justify-content: flex-start;
     }
-    #sheet-id { width: 190px; }
+
+    #sheet-url { width: min(420px, 88vw); }
     #bar-chart { width: min(300px, calc(100% - 28px)); }
+    .columns-grid { grid-template-columns: 1fr; }
+    .column-panel.wide { grid-row: auto; }
   }
 </style>
 </head>
 <body data-theme="dark">
 <div id="app">
   <header id="controls">
-    <div id="brand">
-      <div id="brand-title">Live embedumap</div>
-      <div id="brand-subtitle">Google Form to semantic map</div>
+    <div class="topbar-primary">
+      <div id="brand">
+        <div id="brand-title">Live embedumap</div>
+        <div id="brand-subtitle">Google Form to semantic map</div>
+      </div>
+      <div class="source-controls">
+        <span class="label">Source</span>
+        <select id="source-mode" aria-label="Source mode">
+          <option value="sheet">Live sheet</option>
+          <option value="sample">Sample CSV</option>
+        </select>
+        <button id="sheet-config-btn" class="icon-button" type="button" title="Configure sheet source" aria-label="Configure sheet source"><i data-lucide="table-properties"></i></button>
+      </div>
+      <label class="poll-controls">
+        <span class="label">Refresh</span>
+        <input id="poll-seconds" type="number" min="3" max="300" step="1" aria-label="Refresh interval in seconds">
+        <span class="poll-suffix">sec</span>
+      </label>
+      <div class="icon-actions" aria-label="Map actions">
+        <button id="refresh-btn" class="icon-button" type="button" title="Refresh now" aria-label="Refresh now"><i data-lucide="refresh-cw"></i></button>
+        <button id="pause-btn" class="icon-button" type="button" title="Pause polling" aria-label="Pause polling"><i data-lucide="pause"></i></button>
+        <button id="key-btn" class="icon-button" type="button" title="Set Gemini API key" aria-label="Set Gemini API key"><i data-lucide="key-round"></i></button>
+        <button id="columns-btn" class="icon-button" type="button" title="Choose columns" aria-label="Choose columns"><i data-lucide="columns-3"></i></button>
+        <button id="theme-btn" class="icon-button" type="button" title="Toggle theme" aria-label="Toggle theme"><i data-lucide="sun-moon"></i></button>
+        <button id="header-minimize-btn" class="icon-button" type="button" title="Minimize header" aria-label="Minimize header"><i data-lucide="chevrons-up"></i></button>
+      </div>
+      <div id="status-stack" aria-live="polite">
+        <span id="rows-chip" class="chip">Rows <strong>0</strong></span>
+        <span id="new-chip" class="chip">New <strong>0</strong></span>
+        <span id="cache-chip" class="chip">Cache <strong>0</strong></span>
+        <span id="project-chip" class="chip">Project <strong>idle</strong></span>
+        <span id="last-chip" class="chip">Last <strong>never</strong></span>
+      </div>
     </div>
-    <span class="label">Source</span>
-    <select id="source-mode" aria-label="Source mode">
-      <option value="sheet">Live sheet</option>
-      <option value="sample">Sample CSV</option>
-    </select>
-    <input id="sheet-id" type="text" aria-label="Google Sheet ID">
-    <input id="sheet-gid" type="text" aria-label="Google Sheet gid">
-    <button id="refresh-btn" type="button" title="Refresh now">Refresh</button>
-    <button id="pause-btn" type="button" title="Pause or resume polling">Pause</button>
-    <button id="key-btn" type="button" title="Set Gemini API key">API key</button>
-    <button id="theme-btn" type="button" title="Toggle theme">Theme</button>
-    <span class="label">Search</span>
-    <input id="control-search" type="search" placeholder="Name, answer, cluster" aria-label="Search rows">
-    <span class="label">Color</span>
-    <div id="color-group" class="button-group"></div>
-    <span class="label">Filter</span>
-    <div id="filter-group" class="button-group"></div>
-    <div id="status-stack" aria-live="polite">
-      <span id="rows-chip" class="chip">Rows <strong>0</strong></span>
-      <span id="new-chip" class="chip">New <strong>0</strong></span>
-      <span id="cache-chip" class="chip">Cache <strong>0</strong></span>
-      <span id="project-chip" class="chip">Project <strong>idle</strong></span>
-      <span id="last-chip" class="chip">Last <strong>never</strong></span>
-      <span id="error-chip" class="chip hidden"></span>
+    <div class="topbar-secondary">
+      <div class="search-controls">
+        <span class="label">Search</span>
+        <input id="control-search" type="search" placeholder="Name, answer, cluster" aria-label="Search rows">
+      </div>
+      <div class="field-control-row">
+        <span class="label">Color</span>
+        <div id="color-group" class="button-group"></div>
+      </div>
+      <div class="field-control-row">
+        <span class="label">Filter</span>
+        <div id="filter-group" class="button-group"></div>
+      </div>
     </div>
+    <div id="error-chip" class="status-error hidden" role="status"></div>
   </header>
 
   <main id="plot-wrap">
@@ -722,7 +1205,10 @@
     <canvas id="plot"></canvas>
     <svg id="overlay"></svg>
     <aside id="bar-chart" class="hidden">
-      <div id="bar-chart-head" class="bar-chart-head"></div>
+      <div class="bar-chart-shell-head">
+        <div id="bar-chart-head" class="bar-chart-head"></div>
+        <button id="sidebar-minimize-btn" class="icon-button sidebar-toggle" type="button" title="Minimize sidebar" aria-label="Minimize sidebar"><i data-lucide="chevron-right"></i></button>
+      </div>
       <div id="bar-chart-body" class="bar-chart-body"></div>
     </aside>
   </main>
@@ -771,6 +1257,27 @@
   <div id="popup-body"></div>
 </section>
 
+<div id="sheet-backdrop"></div>
+<section id="sheet-modal" aria-modal="true">
+  <div class="modal-card sheet-card">
+    <div class="modal-head">
+      <div class="modal-title">Sheet source</div>
+      <button id="sheet-close" class="close-button" type="button" aria-label="Close sheet settings">X</button>
+    </div>
+    <div class="settings-form">
+      <div class="settings-help">Paste a public Google Sheet URL. Saving switches the source to Live sheet and reloads the columns for that tab.</div>
+      <label class="settings-row sheet-url-row">
+        <span class="label">Sheet URL</span>
+        <input id="sheet-url" type="text" autocomplete="off" aria-label="Google Sheet URL" placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=0#gid=0">
+      </label>
+      <div class="modal-actions">
+        <button id="cancel-sheet-btn" type="button">Cancel</button>
+        <button id="save-sheet-btn" type="button" class="active">Save sheet</button>
+      </div>
+    </div>
+  </div>
+</section>
+
 <div id="settings-backdrop"></div>
 <section id="settings-modal" aria-modal="true">
   <div class="modal-card">
@@ -796,16 +1303,75 @@
   </div>
 </section>
 
+<div id="columns-backdrop"></div>
+<section id="columns-modal" aria-modal="true">
+  <div class="modal-card columns-card">
+    <div class="modal-head">
+      <div class="modal-title">Column mapping</div>
+      <button id="columns-close" class="close-button" type="button" aria-label="Close columns">X</button>
+    </div>
+    <div class="settings-form">
+      <div id="columns-help" class="settings-help">Choose which CSV or Sheet columns build embeddings and which columns appear as labels, filters, colors, and timeline controls.</div>
+      <div class="columns-toolbar">
+        <input id="column-search" type="search" placeholder="Filter visible columns" aria-label="Filter columns">
+        <div class="column-tools">
+          <button type="button" data-column-clear-role="embedding">Clear embed</button>
+          <button type="button" data-column-clear-role="color">Clear color</button>
+          <button type="button" data-column-clear-role="filter">Clear filters</button>
+        </div>
+        <div id="columns-summary"></div>
+      </div>
+      <div class="columns-grid">
+        <div class="column-panel">
+          <div class="column-panel-head">
+            <div>
+              <div class="label">Primary fields</div>
+              <p class="column-panel-copy">Pick the visible label and time field for the map.</p>
+            </div>
+          </div>
+          <div class="mapping-selects">
+            <label>
+              <div class="label">Point label</div>
+              <select id="label-column-select"></select>
+            </label>
+            <label>
+              <div class="label">Timeline</div>
+              <select id="timeline-column-select"></select>
+            </label>
+          </div>
+        </div>
+        <div class="column-panel column-map-panel">
+          <div class="column-panel-head">
+            <div>
+              <div class="label">Column roles</div>
+              <p class="column-panel-copy">Each sheet column is listed once. Toggle how it should be used.</p>
+            </div>
+          </div>
+          <div id="column-map-list" class="column-map-list"></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="reset-columns-btn" type="button">Reset defaults</button>
+        <button id="save-columns-btn" type="button" class="active">Save and rebuild</button>
+      </div>
+    </div>
+  </div>
+</section>
+
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/umap-js@1.4.0/lib/umap-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
 <script>
 (() => {
   "use strict";
 
   const DEFAULT_SHEET_ID = "1AYPXWYaDnsQmkZJqGicUCCVmcIzX18kKd_kL10pFi0A";
   const DEFAULT_GID = "1433379065";
-  const POLL_MS = 5000;
-  const STALE_MS = 22000;
+  const DEFAULT_SHEET_URL = `https://docs.google.com/spreadsheets/d/${DEFAULT_SHEET_ID}/edit?gid=${DEFAULT_GID}#gid=${DEFAULT_GID}`;
+  const DEFAULT_REFRESH_MS = 10000;
+  const MIN_REFRESH_MS = 3000;
+  const MAX_REFRESH_MS = 300000;
+  const BASE_STALE_MS = 22000;
   const EMBEDDING_MODEL = "gemini-embedding-2";
   const EMBEDDING_DIMS = 768;
   const PREVIEW_DIMS = 128;
@@ -814,6 +1380,11 @@
   const KEY_STORAGE = "liveEmbedumapGeminiKey";
   const PREVIEW_STORAGE = "liveEmbedumapPreviewVectors";
   const THEME_STORAGE = "liveEmbedumapTheme";
+  const MAPPING_STORAGE = "liveEmbedumapColumnMapping";
+  const SHEET_STORAGE = "liveEmbedumapSheetUrl";
+  const REFRESH_STORAGE = "liveEmbedumapRefreshMs";
+  const HEADER_MINIMIZED_STORAGE = "liveEmbedumapHeaderMinimized";
+  const SIDEBAR_MINIMIZED_STORAGE = "liveEmbedumapSidebarMinimized";
   const sliderMax = 10000;
   const speedSliderMax = 10000;
   const opacitySliderMax = 100;
@@ -822,7 +1393,7 @@
   const maxPlaybackDurationMs = 600000;
   const defaultPlaybackDurationMs = 30000;
 
-  const mapping = {
+  const DEFAULT_MAPPING = {
     embeddingColumns: [
       "Workshop question",
       "What should this group explore next?",
@@ -830,10 +1401,91 @@
     ],
     labelColumn: "Name",
     timelineColumn: "Timestamp",
-    categoryColumns: ["Team", "Role", "Region", "Experience level", "Energy"],
+    colorColumns: ["Team", "Role", "Region", "Experience level", "Energy"],
+    filterColumns: ["Team", "Role", "Region", "Experience level", "Energy"],
   };
-  const colorColumns = [...mapping.categoryColumns, "cluster"];
-  const filterColumns = [...mapping.categoryColumns, "cluster"];
+
+  function cleanMapping(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const legacyCategories = Array.isArray(source.categoryColumns) ? source.categoryColumns : null;
+    const uniq = (items) => [...new Set((Array.isArray(items) ? items : []).map((item) => String(item || "").trim()).filter(Boolean))];
+    const listOrDefault = (items, fallback) => (Array.isArray(items) ? uniq(items) : [...fallback]);
+    return {
+      embeddingColumns: listOrDefault(source.embeddingColumns, DEFAULT_MAPPING.embeddingColumns),
+      labelColumn: String(source.labelColumn ?? DEFAULT_MAPPING.labelColumn).trim(),
+      timelineColumn: String(source.timelineColumn ?? DEFAULT_MAPPING.timelineColumn).trim(),
+      colorColumns: listOrDefault(source.colorColumns ?? legacyCategories, DEFAULT_MAPPING.colorColumns),
+      filterColumns: listOrDefault(source.filterColumns ?? legacyCategories, DEFAULT_MAPPING.filterColumns),
+    };
+  }
+
+  function loadMapping() {
+    try {
+      return cleanMapping(JSON.parse(localStorage.getItem(MAPPING_STORAGE) || "null"));
+    } catch (error) {
+      return cleanMapping(DEFAULT_MAPPING);
+    }
+  }
+
+  function normalizeRefreshMs(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return DEFAULT_REFRESH_MS;
+    return Math.round(clamp(numeric, MIN_REFRESH_MS, MAX_REFRESH_MS));
+  }
+
+  function loadRefreshMs() {
+    return normalizeRefreshMs(localStorage.getItem(REFRESH_STORAGE) || DEFAULT_REFRESH_MS);
+  }
+
+  let mapping = loadMapping();
+  let colorColumns = [];
+  let filterColumns = [];
+
+  function syncDerivedColumns() {
+    colorColumns = [...new Set([...(mapping.colorColumns || []), "cluster"])];
+    filterColumns = [...new Set([...(mapping.filterColumns || []), "cluster"])];
+  }
+
+  syncDerivedColumns();
+
+  function parseSheetSource(value, fallbackGid = DEFAULT_GID) {
+    const raw = String(value || "").trim();
+    if (!raw) return parseSheetSource(DEFAULT_SHEET_URL, DEFAULT_GID);
+    let sheetId = "";
+    let gid = "";
+    if (/^https?:\/\//i.test(raw)) {
+      const url = new URL(raw);
+      const match = url.pathname.match(/\/spreadsheets\/d\/([^/]+)/);
+      if (!match) throw new Error("Paste a Google Sheets URL that contains /spreadsheets/d/...");
+      sheetId = decodeURIComponent(match[1]);
+      gid = url.searchParams.get("gid") || "";
+      const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
+      gid = hashParams.get("gid") || gid;
+    } else {
+      sheetId = raw;
+    }
+    sheetId = sheetId.trim();
+    gid = String(gid || fallbackGid || "0").trim();
+    if (!/^[A-Za-z0-9_-]+$/.test(sheetId)) {
+      throw new Error("Could not read the spreadsheet ID from that URL.");
+    }
+    if (!/^\d+$/.test(gid)) gid = "0";
+    return {
+      sheetId,
+      gid,
+      url: `https://docs.google.com/spreadsheets/d/${sheetId}/edit?gid=${gid}#gid=${gid}`,
+    };
+  }
+
+  function safeSheetSource(value) {
+    try {
+      return parseSheetSource(value || localStorage.getItem(SHEET_STORAGE) || DEFAULT_SHEET_URL);
+    } catch (error) {
+      return parseSheetSource(DEFAULT_SHEET_URL);
+    }
+  }
+
+  const initialSheet = safeSheetSource(localStorage.getItem(SHEET_STORAGE) || DEFAULT_SHEET_URL);
   const palette = [
     "#45c3a0", "#e0a84f", "#d96858", "#6fa7d7", "#b98ad9", "#83b75d",
     "#d7839a", "#63b7bd", "#c7b25c", "#8d99c7", "#c58555", "#60a782",
@@ -866,13 +1518,15 @@
 
   const state = {
     sourceMode: "sheet",
-    sheetId: DEFAULT_SHEET_ID,
-    gid: DEFAULT_GID,
+    sheetUrl: initialSheet.url,
+    sheetId: initialSheet.sheetId,
+    gid: initialSheet.gid,
     apiKey: localStorage.getItem(KEY_STORAGE) || "",
     previewVectors: localStorage.getItem(PREVIEW_STORAGE) === "1",
     paused: false,
     refreshing: false,
-    colorBy: "Team",
+    refreshMs: loadRefreshMs(),
+    colorBy: colorColumns[0] || "cluster",
     filters: Object.fromEntries(filterColumns.map((column) => [column, ""])),
     searchQuery: "",
     selectedIds: new Set(),
@@ -890,6 +1544,10 @@
     lastSignature: "",
     lastCsvText: "",
     projectionTicket: 0,
+    pendingRefresh: false,
+    resetLayoutOnNextRefresh: false,
+    headerMinimized: localStorage.getItem(HEADER_MINIMIZED_STORAGE) === "1",
+    sidebarMinimized: localStorage.getItem(SIDEBAR_MINIMIZED_STORAGE) === "1",
   };
 
   let DATA = null;
@@ -907,6 +1565,7 @@
   let playPrev = null;
   let projectionWorker = null;
   let dbPromise = null;
+  let latestColumns = [];
   const memoryCache = new Map();
 
   const timelineFormatter = new Intl.DateTimeFormat(undefined, {
@@ -925,6 +1584,14 @@
       .replaceAll('"', "&quot;");
   }
 
+  function titleText(value) {
+    return escapeHtml(String(value ?? "").replace(/\s+/g, " ").trim());
+  }
+
+  function keyValueHtml(key, value, keyClass, valueClass) {
+    return `<div class="${keyClass}" title="${titleText(key)}">${escapeHtml(key)}</div><div class="${valueClass}" title="${titleText(value)}">${escapeHtml(value)}</div>`;
+  }
+
   function truncate(value, limit = 160) {
     const text = String(value ?? "").trim();
     return text.length <= limit ? text : `${text.slice(0, limit - 1).trim()}...`;
@@ -932,6 +1599,35 @@
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
+  }
+
+  function refreshIcons() {
+    if (globalThis.lucide?.createIcons) {
+      globalThis.lucide.createIcons({ attrs: { "stroke-width": 2 } });
+    }
+  }
+
+  function setIconButton(button, icon, label) {
+    if (!button) return;
+    button.innerHTML = `<i data-lucide="${icon}"></i>`;
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    refreshIcons();
+  }
+
+  function syncLayoutChrome() {
+    $("#controls").classList.toggle("header-minimized", state.headerMinimized);
+    setIconButton(
+      $("#header-minimize-btn"),
+      state.headerMinimized ? "chevrons-down" : "chevrons-up",
+      state.headerMinimized ? "Restore header" : "Minimize header",
+    );
+    barChart.classList.toggle("collapsed", state.sidebarMinimized);
+    setIconButton(
+      $("#sidebar-minimize-btn"),
+      state.sidebarMinimized ? "chevron-left" : "chevron-right",
+      state.sidebarMinimized ? "Restore sidebar" : "Minimize sidebar",
+    );
   }
 
   function normalizeVector(vector) {
@@ -1029,6 +1725,14 @@
     const params = hashParams();
     const source = params.get("source");
     if (source === "sheet" || source === "sample") state.sourceMode = source;
+    const sheet = params.get("sheet");
+    if (sheet) {
+      try {
+        setSheetSource(sheet, { persist: false });
+      } catch (error) {
+        setError(error?.message || String(error));
+      }
+    }
     const color = params.get("color");
     if (color && colorColumns.includes(color)) state.colorBy = color;
     const search = params.get("q");
@@ -1057,11 +1761,13 @@
 
   function syncUrlState() {
     const params = new URLSearchParams();
+    const defaultColor = colorColumns[0] || "cluster";
     if (state.sourceMode !== "sheet") params.set("source", state.sourceMode);
-    if (state.colorBy !== "Team") params.set("color", state.colorBy);
+    if (state.sourceMode === "sheet" && state.sheetUrl !== DEFAULT_SHEET_URL) params.set("sheet", state.sheetUrl);
+    if (state.colorBy !== defaultColor) params.set("color", state.colorBy);
     if (state.searchQuery.trim()) params.set("q", state.searchQuery.trim());
     if (state.popupStyle !== "table") params.set("popup", state.popupStyle);
-    if (state.sortColumn !== mapping.timelineColumn) params.set("sort", state.sortColumn);
+    if (state.sortColumn !== (mapping.timelineColumn || "_row_index")) params.set("sort", state.sortColumn);
     if (!state.sortAsc) params.set("dir", "desc");
     if (state.paused) params.set("paused", "1");
     for (const column of filterColumns) {
@@ -1085,16 +1791,18 @@
 
   function setError(message) {
     const chip = $("#error-chip");
-    chip.textContent = message;
+    chip.innerHTML = `<strong>Issue</strong><span>${escapeHtml(message)}</span>`;
     chip.classList.remove("hidden");
-    chip.classList.add("bad");
   }
 
   function clearError() {
     const chip = $("#error-chip");
-    chip.textContent = "";
+    chip.innerHTML = "";
     chip.classList.add("hidden");
-    chip.classList.remove("bad");
+  }
+
+  function staleThresholdMs() {
+    return Math.max(BASE_STALE_MS, state.refreshMs * 2.4);
   }
 
   function updateStatus(extra = {}) {
@@ -1103,17 +1811,22 @@
     $("#cache-chip").innerHTML = `Cache <strong>${extra.cacheHits ?? 0}</strong>`;
     $("#project-chip").innerHTML = `Project <strong>${extra.project ?? "idle"}</strong>`;
     $("#last-chip").innerHTML = `Last <strong>${formatClock(state.lastSuccessAt)}</strong>`;
-    $("#pause-btn").textContent = state.paused ? "Resume" : "Pause";
+    setIconButton($("#pause-btn"), state.paused ? "play" : "pause", state.paused ? "Resume polling" : "Pause polling");
     $("#pause-btn").classList.toggle("active", state.paused);
+    $("#sheet-config-btn").classList.toggle("active", state.sourceMode === "sheet");
+    $("#sheet-config-btn").title = state.sourceMode === "sheet" ? `Sheet source: ${state.sheetUrl}` : "Configure sheet source";
     $("#source-mode").value = state.sourceMode;
-    $("#sheet-id").value = state.sheetId;
-    $("#sheet-gid").value = state.gid;
+    if ($("#sheet-url") && document.activeElement !== $("#sheet-url")) $("#sheet-url").value = state.sheetUrl;
+    const pollInput = $("#poll-seconds");
+    if (pollInput && document.activeElement !== pollInput) {
+      pollInput.value = String(Math.round(state.refreshMs / 1000));
+    }
   }
 
   function updateClockStatus() {
     const chip = $("#last-chip");
     chip.innerHTML = `Last <strong>${formatClock(state.lastSuccessAt)}</strong>`;
-    chip.classList.toggle("warn", Boolean(state.lastSuccessAt && Date.now() - state.lastSuccessAt.getTime() > STALE_MS));
+    chip.classList.toggle("warn", Boolean(state.lastSuccessAt && Date.now() - state.lastSuccessAt.getTime() > staleThresholdMs()));
   }
 
   function openDb() {
@@ -1155,8 +1868,9 @@
     await Promise.all(missing.map(async (key) => {
       const row = await idbGet(store, key);
       if (row?.vector) {
-        memoryCache.set(key, row.vector);
-        result.set(key, row.vector);
+        const vector = normalizeVector(row.vector);
+        memoryCache.set(key, vector);
+        result.set(key, vector);
       }
     }));
     return result;
@@ -1217,8 +1931,9 @@
   function sourceUrl() {
     const cacheBust = `_=${Date.now()}`;
     if (state.sourceMode === "sample") return `sample.csv?${cacheBust}`;
-    const sheetId = encodeURIComponent(state.sheetId.trim() || DEFAULT_SHEET_ID);
-    const gid = encodeURIComponent(state.gid.trim() || DEFAULT_GID);
+    const parsed = setSheetSource(state.sheetUrl || DEFAULT_SHEET_URL);
+    const sheetId = encodeURIComponent(parsed.sheetId);
+    const gid = encodeURIComponent(parsed.gid);
     return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}&${cacheBust}`;
   }
 
@@ -1245,6 +1960,95 @@
       })
       .filter(Boolean)
       .join("\n\n");
+  }
+
+  function availableColumns() {
+    return (latestColumns.length ? latestColumns : (DATA?.columns || [])).slice();
+  }
+
+  function mappingStorageKey(mode = state.sourceMode, sheetId = state.sheetId, gid = state.gid) {
+    return mode === "sample" ? `${MAPPING_STORAGE}:sample` : `${MAPPING_STORAGE}:${sheetId}:${gid}`;
+  }
+
+  function loadMappingForCurrentSource() {
+    try {
+      const sourceValue = localStorage.getItem(mappingStorageKey());
+      if (sourceValue) return cleanMapping(JSON.parse(sourceValue));
+      return loadMapping();
+    } catch (error) {
+      return cleanMapping(DEFAULT_MAPPING);
+    }
+  }
+
+  function saveMappingForCurrentSource() {
+    const text = JSON.stringify(mapping);
+    localStorage.setItem(mappingStorageKey(), text);
+    localStorage.setItem(MAPPING_STORAGE, text);
+  }
+
+  function setSheetSource(value, { persist = true } = {}) {
+    const parsed = parseSheetSource(value, state?.gid || DEFAULT_GID);
+    state.sheetUrl = parsed.url;
+    state.sheetId = parsed.sheetId;
+    state.gid = parsed.gid;
+    if (persist) localStorage.setItem(SHEET_STORAGE, state.sheetUrl);
+    const input = $("#sheet-url");
+    if (input) input.value = state.sheetUrl;
+    return parsed;
+  }
+
+  function commitSheetUrlInput() {
+    if (state.sourceMode !== "sheet") return true;
+    const input = $("#sheet-url");
+    if (!input) return true;
+    const value = input.value.trim();
+    if (!value || value === state.sheetUrl) return true;
+    try {
+      const beforeKey = mappingStorageKey();
+      setSheetSource(value);
+      if (mappingStorageKey() !== beforeKey) {
+        mapping = loadMappingForCurrentSource();
+        ensureStateForMapping();
+        state.selectedIds = new Set();
+        state.timelineMin = null;
+        state.timelineMax = null;
+        state.lastSignature = "";
+        state.resetLayoutOnNextRefresh = true;
+      }
+      syncUrlState();
+      return true;
+    } catch (error) {
+      setError(error?.message || String(error));
+      return false;
+    }
+  }
+
+  function commitRefreshInput() {
+    const input = $("#poll-seconds");
+    if (!input) return;
+    const refreshMs = input.value.trim()
+      ? normalizeRefreshMs(Number(input.value) * 1000)
+      : DEFAULT_REFRESH_MS;
+    state.refreshMs = refreshMs;
+    input.value = String(Math.round(refreshMs / 1000));
+    localStorage.setItem(REFRESH_STORAGE, String(refreshMs));
+    startPolling();
+    updateClockStatus();
+  }
+
+  function mappingHasUsableEmbeddingColumn(columns = availableColumns()) {
+    const columnSet = new Set(columns);
+    return mapping.embeddingColumns.some((column) => columnSet.has(column));
+  }
+
+  function ensureStateForMapping() {
+    syncDerivedColumns();
+    const nextFilters = {};
+    for (const column of filterColumns) nextFilters[column] = state.filters[column] || "";
+    state.filters = nextFilters;
+    if (!colorColumns.includes(state.colorBy)) state.colorBy = colorColumns[0] || "cluster";
+    const sortColumns = DATA?.sortColumns || ["_row_index", mapping.timelineColumn].filter(Boolean);
+    if (!sortColumns.includes(state.sortColumn)) state.sortColumn = mapping.timelineColumn || "_row_index";
   }
 
   async function prepareRecords(csvText) {
@@ -1330,7 +2134,7 @@
       return { vectors, cacheHits: 0, embedded: records.length, preview: true };
     }
     if (!state.apiKey) {
-      throw new Error("Gemini API key required. Click API key to save it in this browser.");
+      throw new Error("Gemini API key required. Click the key icon to save it in this browser, then the map will refresh.");
     }
     const keys = records.map((record) => `${EMBEDDING_MODEL}|${EMBEDDING_DIMS}|${record.hash}`);
     const cached = await getCachedEmbeddings(keys);
@@ -1420,16 +2224,131 @@
         if (!count) return [];
         if (count === 1) return [[0, 0]];
         if (count === 2) return [[-1, 0], [1, 0]];
-        return vectors.map((vector, index) => {
+        const data = vectors.map(normalize);
+        const coords = data.map((vector, index) => {
           let x = 0, y = 0;
           for (let i = 0; i < vector.length; i += 1) {
             const angle = (i * 2.3999632297) + 0.3;
             x += vector[i] * Math.cos(angle);
             y += vector[i] * Math.sin(angle);
           }
-          const spread = 0.08 * index;
-          return [x + Math.cos(index) * spread, y + Math.sin(index) * spread];
+          const ring = 0.22 + (index / count) * 0.18;
+          const angle = (index / count) * Math.PI * 2;
+          return [x + Math.cos(angle) * ring, y + Math.sin(angle) * ring];
         });
+        return refineLocalStructure(coords, vectors, { iterations: 140, strength: 0.03 });
+      }
+      function standardizeCoords(coords) {
+        const safe = coords.map((pair) => [Number(pair?.[0]) || 0, Number(pair?.[1]) || 0]);
+        const mean = safe.reduce((acc, pair) => [acc[0] + pair[0], acc[1] + pair[1]], [0, 0]).map((value) => value / Math.max(1, safe.length));
+        let variance = 0;
+        for (const pair of safe) variance += ((pair[0] - mean[0]) ** 2) + ((pair[1] - mean[1]) ** 2);
+        const scale = Math.sqrt(variance / Math.max(1, safe.length)) || 1;
+        return {
+          points: safe.map((pair) => [(pair[0] - mean[0]) / scale, (pair[1] - mean[1]) / scale]),
+          mean,
+          scale,
+        };
+      }
+      function localNeighborEdges(vectors) {
+        const count = vectors.length;
+        if (count < 2) return [];
+        const data = vectors.map(normalize);
+        const neighborCount = clamp(Math.round(Math.sqrt(count)) + 1, 2, Math.min(8, count - 1));
+        const byNode = Array.from({ length: count }, () => []);
+        for (let i = 0; i < count; i += 1) {
+          for (let j = i + 1; j < count; j += 1) {
+            const similarity = dot(data[i], data[j]);
+            byNode[i].push({ index: j, similarity });
+            byNode[j].push({ index: i, similarity });
+          }
+        }
+        const edges = new Map();
+        for (let i = 0; i < count; i += 1) {
+          byNode[i].sort((left, right) => right.similarity - left.similarity);
+          const strongest = byNode[i][0]?.similarity ?? 0;
+          const weakest = byNode[i][Math.min(neighborCount - 1, byNode[i].length - 1)]?.similarity ?? strongest;
+          const span = Math.max(0.0001, strongest - weakest);
+          for (let rank = 0; rank < Math.min(neighborCount, byNode[i].length); rank += 1) {
+            const neighbor = byNode[i][rank];
+            const a = Math.min(i, neighbor.index);
+            const b = Math.max(i, neighbor.index);
+            const key = a + ":" + b;
+            const relative = clamp((neighbor.similarity - weakest) / span, 0, 1);
+            const rankWeight = 1 - (rank / (neighborCount + 1));
+            const weight = Math.max(0.16, (0.35 + relative * 0.65) * rankWeight);
+            const target = 0.13 + rank * 0.045 + (1 - relative) * 0.2;
+            const current = edges.get(key);
+            if (!current || weight > current.weight) edges.set(key, { i: a, j: b, weight, target });
+          }
+        }
+        return [...edges.values()];
+      }
+      function refineLocalStructure(coords, vectors, options = {}) {
+        const count = coords.length;
+        if (count < 3 || vectors.length !== count) return coords.map((pair) => [Number(pair?.[0]) || 0, Number(pair?.[1]) || 0]);
+        const edges = localNeighborEdges(vectors);
+        if (!edges.length) return coords;
+        const standardized = standardizeCoords(coords);
+        let points = standardized.points.map((pair) => pair.slice());
+        const original = points.map((pair) => pair.slice());
+        const iterations = options.iterations ?? 80;
+        const strength = options.strength ?? 0.018;
+        const minDistance = options.minDistance ?? 0.055;
+        for (let iteration = 0; iteration < iterations; iteration += 1) {
+          const deltas = Array.from({ length: count }, () => [0, 0]);
+          for (const edge of edges) {
+            const left = points[edge.i];
+            const right = points[edge.j];
+            let dx = right[0] - left[0];
+            let dy = right[1] - left[1];
+            let distance = Math.hypot(dx, dy);
+            if (!distance) {
+              const angle = ((edge.i * 1103515245 + edge.j * 12345) >>> 0) / 4294967296 * Math.PI * 2;
+              dx = Math.cos(angle) * 0.001;
+              dy = Math.sin(angle) * 0.001;
+              distance = 0.001;
+            }
+            const force = (distance - edge.target) * edge.weight * strength;
+            const fx = (dx / distance) * force;
+            const fy = (dy / distance) * force;
+            deltas[edge.i][0] += fx;
+            deltas[edge.i][1] += fy;
+            deltas[edge.j][0] -= fx;
+            deltas[edge.j][1] -= fy;
+          }
+          for (let i = 0; i < count; i += 1) {
+            for (let j = i + 1; j < count; j += 1) {
+              let dx = points[j][0] - points[i][0];
+              let dy = points[j][1] - points[i][1];
+              let distance = Math.hypot(dx, dy);
+              if (!distance) {
+                const angle = ((i * 1664525 + j * 1013904223) >>> 0) / 4294967296 * Math.PI * 2;
+                dx = Math.cos(angle) * 0.001;
+                dy = Math.sin(angle) * 0.001;
+                distance = 0.001;
+              }
+              if (distance >= minDistance) continue;
+              const force = (minDistance - distance) * 0.012;
+              const fx = (dx / distance) * force;
+              const fy = (dy / distance) * force;
+              deltas[i][0] -= fx;
+              deltas[i][1] -= fy;
+              deltas[j][0] += fx;
+              deltas[j][1] += fy;
+            }
+          }
+          const anchor = 0.0025;
+          const cooling = 1 - (iteration / Math.max(1, iterations)) * 0.45;
+          points = points.map((point, index) => [
+            point[0] + (deltas[index][0] + (original[index][0] - point[0]) * anchor) * cooling,
+            point[1] + (deltas[index][1] + (original[index][1] - point[1]) * anchor) * cooling,
+          ]);
+        }
+        return points.map((point) => [
+          standardized.mean[0] + point[0] * standardized.scale,
+          standardized.mean[1] + point[1] * standardized.scale,
+        ]);
       }
       function runKmeans(vectors) {
         const count = vectors.length;
@@ -1498,11 +2417,11 @@
       }
       async function fitUmap(vectors, seed) {
         if (!UMAPCtor || vectors.length < 5) return { coords: fallbackCoords(vectors), model: null, method: "fallback" };
-        const nNeighbors = clamp(Math.min(20, vectors.length - 1), 2, Math.max(2, vectors.length - 1));
+        const nNeighbors = clamp(Math.min(12, vectors.length - 1), 2, Math.max(2, vectors.length - 1));
         const umap = new UMAPCtor({
           nComponents: 2,
           nNeighbors,
-          minDist: 0.15,
+          minDist: 0.045,
           spread: 1,
           distanceFn: cosineDistance,
           random: mulberry32(seed || 42),
@@ -1550,6 +2469,7 @@
             fitted = fittedResult.model;
             method = fittedResult.method;
           }
+          if (method !== "reuse") coords = refineLocalStructure(coords, vectors);
           fittedHashes = hashes.slice();
           fittedCoords = coords.map((pair) => [Number(pair[0]) || 0, Number(pair[1]) || 0]);
           const clusters = runKmeans(vectors);
@@ -1730,8 +2650,18 @@
   }
 
   function placeNewRowsNearNeighbors(rows, vectors, anchored, previousData, domain) {
-    const previousRows = (previousData?.rows || []).filter((row) => row.vector?.length);
-    if (!previousRows.length || !domain) return;
+    const hadPreviousRows = (previousData?.rows || []).some((row) => row.vector?.length);
+    if (!hadPreviousRows || !domain) return;
+    const referenceRows = rows
+      .map((row, index) => ({
+        row,
+        index,
+        x: row.x,
+        y: row.y,
+        vector: vectors[index] || row.vector,
+      }))
+      .filter((item) => item.vector?.length && Number.isFinite(item.x) && Number.isFinite(item.y));
+    if (referenceRows.length < 2) return;
     const xSpan = Math.max(1e-9, domain.x[1] - domain.x[0]);
     const ySpan = Math.max(1e-9, domain.y[1] - domain.y[0]);
     const baseJitter = Math.min(xSpan, ySpan) * 0.018;
@@ -1740,8 +2670,9 @@
       if (anchored[index]) continue;
       const vector = vectors[index];
       if (!vector?.length) continue;
-      const neighbors = previousRows
-        .map((row) => ({ row, similarity: vectorDot(vector, row.vector) }))
+      const neighbors = referenceRows
+        .filter((item) => item.index !== index)
+        .map((item) => ({ item, similarity: vectorDot(vector, item.vector) }))
         .filter((item) => Number.isFinite(item.similarity))
         .sort((left, right) => right.similarity - left.similarity)
         .slice(0, 6);
@@ -1753,23 +2684,23 @@
       const angle = ((seed % 3600) / 3600) * Math.PI * 2;
       const radius = baseJitter * (0.65 + (((seed >>> 8) % 1000) / 1000) * 0.7);
       if (best >= 0.88 || best - second >= 0.04) {
-        rows[index].x = neighbors[0].row.x + Math.cos(angle) * radius;
-        rows[index].y = neighbors[0].row.y + Math.sin(angle) * radius;
+        rows[index].x = neighbors[0].item.x + Math.cos(angle) * radius;
+        rows[index].y = neighbors[0].item.y + Math.sin(angle) * radius;
       } else {
         let weightSum = 0;
         let x = 0;
         let y = 0;
         for (const neighbor of neighbors) {
           const weight = Math.exp((neighbor.similarity - best) * 22);
-          x += neighbor.row.x * weight;
-          y += neighbor.row.y * weight;
+          x += neighbor.item.x * weight;
+          y += neighbor.item.y * weight;
           weightSum += weight;
         }
         if (!weightSum) continue;
         rows[index].x = (x / weightSum) + Math.cos(angle) * radius;
         rows[index].y = (y / weightSum) + Math.sin(angle) * radius;
       }
-      rows[index].nearestLabel = neighbors[0].row.label;
+      rows[index].nearestLabel = neighbors[0].item.row.label;
       rows[index].nearestSimilarity = best;
     }
   }
@@ -1782,8 +2713,10 @@
       const clusterLabel = clusterMap.get(clusterId)?.label || `Cluster ${clusterId + 1}`;
       const colors = {};
       const filters = {};
-      for (const column of mapping.categoryColumns) {
+      for (const column of mapping.colorColumns) {
         colors[column] = record.raw[column] || "(blank)";
+      }
+      for (const column of mapping.filterColumns) {
         filters[column] = record.raw[column] || "(blank)";
       }
       colors.cluster = clusterLabel;
@@ -1808,9 +2741,10 @@
       rows,
       colorColumns,
       filterColumns,
-      sortColumns: ["_row_index", mapping.timelineColumn, ...columns].filter((value, index, list) => value && list.indexOf(value) === index),
-      defaultSort: mapping.timelineColumn,
-      timelineColumn: mapping.timelineColumn,
+      sortColumns: ["_row_index", ...(columns.includes(mapping.timelineColumn) ? [mapping.timelineColumn] : []), ...columns]
+        .filter((value, index, list) => value && list.indexOf(value) === index),
+      defaultSort: columns.includes(mapping.timelineColumn) ? mapping.timelineColumn : "_row_index",
+      timelineColumn: columns.includes(mapping.timelineColumn) ? mapping.timelineColumn : null,
       timelineMin: timelineValues.length ? Math.min(...timelineValues) : null,
       timelineMax: timelineValues.length ? Math.max(...timelineValues) : null,
       xDomain: domain.x,
@@ -1822,7 +2756,11 @@
   }
 
   async function refreshData({ manual = false } = {}) {
-    if (state.refreshing) return;
+    if (state.refreshing) {
+      if (manual) state.pendingRefresh = true;
+      return;
+    }
+    if (!commitSheetUrlInput()) return;
     state.refreshing = true;
     clearError();
     updateStatus({ project: "fetch" });
@@ -1830,6 +2768,10 @@
     try {
       const csvText = await fetchCsvText();
       const { columns, records, skipped } = await prepareRecords(csvText);
+      latestColumns = columns.slice();
+      if (!mappingHasUsableEmbeddingColumn(columns)) {
+        throw new Error("The selected embedding columns are not in this sheet. Open Columns and choose fields for this sheet.");
+      }
       if (!records.length) throw new Error(`No embeddable rows found${skipped ? ` (${skipped} skipped)` : ""}`);
       const signature = records.map((record) => record.hash).join("|");
       const rowDelta = Math.max(0, records.length - state.lastRowCount);
@@ -1846,8 +2788,10 @@
       updateStatus({ newRows: rowDelta, cacheHits: embeddingResult.cacheHits, project: embeddingResult.preview ? "preview" : "project" });
       if (!DATA) setLoading("Projecting map", "Running browser-native UMAP in a worker", 54, true);
       const projectionResult = await project(embeddingResult.vectors, records);
-      const nextData = buildData(columns, records, projectionResult, embeddingResult.vectors);
+      const previousForBuild = state.resetLayoutOnNextRefresh ? null : DATA;
+      const nextData = buildData(columns, records, projectionResult, embeddingResult.vectors, previousForBuild);
       DATA = nextData;
+      state.resetLayoutOnNextRefresh = false;
       state.lastSuccessAt = new Date();
       state.lastRowCount = records.length;
       state.lastSignature = signature;
@@ -1874,9 +2818,12 @@
       updateStatus({ project: "error" });
       if (!DATA) setLoading("Map needs attention", message, 0, true);
       else refreshScene({ syncUrl: false });
-      if (!state.apiKey && !state.previewVectors) showSettings();
     } finally {
       state.refreshing = false;
+      if (state.pendingRefresh) {
+        state.pendingRefresh = false;
+        setTimeout(() => refreshData({ manual: true }), 0);
+      }
     }
   }
 
@@ -1934,6 +2881,7 @@
 
   function updateBarChart(scene) {
     if (!DATA) return;
+    syncLayoutChrome();
     const counts = new Map();
     for (const row of scene.selectable) {
       const key = colorValue(row);
@@ -1945,13 +2893,13 @@
       .slice(0, 20);
     barChart.classList.remove("hidden");
     if (!entries.length) {
-      barChartHead.innerHTML = `<span>Visible by ${escapeHtml(state.colorBy)}</span><span>0 categories</span>`;
+      barChartHead.innerHTML = `<span title="${titleText(state.colorBy)}">Visible by ${escapeHtml(state.colorBy)}</span><span>0 categories</span>`;
       barChartBody.html(`<div class="label">No visible rows</div>`);
       return;
     }
     const totalCategories = counts.size;
     const suffix = totalCategories > entries.length ? `Top ${entries.length} of ${totalCategories}` : `${entries.length} categories`;
-    barChartHead.innerHTML = `<span>Visible by ${escapeHtml(state.colorBy)}</span><span>${escapeHtml(suffix)}</span>`;
+    barChartHead.innerHTML = `<span title="${titleText(state.colorBy)}">Visible by ${escapeHtml(state.colorBy)}</span><span>${escapeHtml(suffix)}</span>`;
     const maxCount = d3.max(entries, (entry) => entry.count) || 1;
     const scale = colorScale();
     const rows = barChartBody.selectAll(".bar-row").data(entries, (entry) => entry.key);
@@ -2036,9 +2984,9 @@
 
   function showTooltip(row, event) {
     const fields = Object.entries(row.tooltip)
-      .map(([key, value]) => `<div class="tooltip-key">${escapeHtml(key)}</div><div class="tooltip-value">${escapeHtml(value)}</div>`)
+      .map(([key, value]) => keyValueHtml(key, value, "tooltip-key", "tooltip-value"))
       .join("");
-    tooltip.innerHTML = `<div class="tooltip-label">${escapeHtml(row.label)}</div><div class="tooltip-grid">${fields}</div>`;
+    tooltip.innerHTML = `<div class="tooltip-label" title="${titleText(row.label)}">${escapeHtml(row.label)}</div><div class="tooltip-grid">${fields}</div>`;
     tooltip.style.display = "block";
     tooltip.style.left = `${Math.max(12, Math.min(window.innerWidth - tooltip.offsetWidth - 12, event.clientX + 14))}px`;
     tooltip.style.top = `${Math.max(12, Math.min(window.innerHeight - tooltip.offsetHeight - 12, event.clientY + 14))}px`;
@@ -2056,7 +3004,7 @@
     if (column === "_row_index") {
       a = left.rowIndex;
       b = right.rowIndex;
-    } else if (column === mapping.timelineColumn) {
+    } else if (column === DATA.timelineColumn) {
       a = left.timelineMs ?? Number.NEGATIVE_INFINITY;
       b = right.timelineMs ?? Number.NEGATIVE_INFINITY;
     } else {
@@ -2075,7 +3023,7 @@
 
   function renderFieldGrid(row) {
     return Object.entries(row.raw)
-      .map(([key, value]) => `<div class="field-key">${escapeHtml(key)}</div><div class="field-value">${escapeHtml(value)}</div>`)
+      .map(([key, value]) => keyValueHtml(key, value, "field-key", "field-value"))
       .join("");
   }
 
@@ -2083,21 +3031,24 @@
     const headers = DATA.columns.map((column) => {
       const sorted = state.sortColumn === column;
       const arrow = sorted ? (state.sortAsc ? " ^" : " v") : "";
-      return `<th data-sort="${escapeHtml(column)}" class="${sorted ? "sorted" : ""}">${escapeHtml(column)}${arrow}</th>`;
+      return `<th data-sort="${escapeHtml(column)}" class="${sorted ? "sorted" : ""}" title="${titleText(column)}"><span class="table-heading">${escapeHtml(column)}${arrow}</span></th>`;
     }).join("");
     const body = rows.map((row) => {
-      const cells = DATA.columns.map((column) => `<td>${escapeHtml(row.raw[column] ?? "")}</td>`).join("");
+      const cells = DATA.columns.map((column) => {
+        const value = row.raw[column] ?? "";
+        return `<td title="${titleText(value)}"><span class="table-cell">${escapeHtml(value)}</span></td>`;
+      }).join("");
       return `<tr>${cells}</tr>`;
     }).join("");
-    popupBody.innerHTML = `<table class="popup-table"><thead><tr>${headers}</tr></thead><tbody>${body}</tbody></table>`;
+    popupBody.innerHTML = `<table class="popup-table" style="--column-count:${DATA.columns.length}"><thead><tr>${headers}</tr></thead><tbody>${body}</tbody></table>`;
   }
 
   function renderCards(rows, grid) {
     popupBody.innerHTML = `<div class="${grid ? "card-grid" : "card-list"}">${rows.map((row) => `
       <article class="row-card">
         <div class="row-card-head">
-          <div class="row-card-title">${escapeHtml(row.label)}</div>
-          <div class="row-card-subtitle">${escapeHtml(row.clusterLabel)}</div>
+          <div class="row-card-title" title="${titleText(row.label)}">${escapeHtml(row.label)}</div>
+          <div class="row-card-subtitle" title="${titleText(row.clusterLabel)}">${escapeHtml(row.clusterLabel)}</div>
         </div>
         <div class="field-grid">${renderFieldGrid(row)}</div>
       </article>
@@ -2155,7 +3106,7 @@
   function buildColorControls() {
     const group = $("#color-group");
     group.innerHTML = colorColumns.map((column) => (
-      `<button type="button" data-color="${escapeHtml(column)}" class="${column === state.colorBy ? "active" : ""}">${escapeHtml(column)}</button>`
+      `<button type="button" data-color="${escapeHtml(column)}" class="${column === state.colorBy ? "active" : ""}" title="${titleText(column)}">${escapeHtml(column)}</button>`
     )).join("");
     group.onclick = (event) => {
       const button = event.target.closest("[data-color]");
@@ -2177,7 +3128,7 @@
       const options = [`<option value="">All ${escapeHtml(column)}</option>`]
         .concat(values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`))
         .join("");
-      return `<select data-filter="${escapeHtml(column)}">${options}</select>`;
+      return `<select data-filter="${escapeHtml(column)}" title="Filter: ${titleText(column)}" aria-label="Filter ${escapeHtml(column)}">${options}</select>`;
     }).join("");
     for (const select of container.querySelectorAll("select")) {
       select.value = state.filters[select.dataset.filter] || "";
@@ -2194,12 +3145,14 @@
     select.innerHTML = DATA.sortColumns.map((column) => (
       `<option value="${escapeHtml(column)}">${escapeHtml(column === "_row_index" ? "Row order" : column)}</option>`
     )).join("");
+    select.title = state.sortColumn === "_row_index" ? "Row order" : String(state.sortColumn ?? "").replace(/\s+/g, " ").trim();
     if (!DATA.sortColumns.includes(state.sortColumn)) state.sortColumn = DATA.defaultSort;
     select.value = state.sortColumn;
     $("#sort-direction").textContent = state.sortAsc ? "Ascending" : "Descending";
   }
 
   function buildDynamicControls() {
+    ensureStateForMapping();
     buildColorControls();
     buildFilterControls();
     buildSortControls();
@@ -2208,8 +3161,7 @@
 
   function syncControlsFromState() {
     $("#source-mode").value = state.sourceMode;
-    $("#sheet-id").value = state.sheetId;
-    $("#sheet-gid").value = state.gid;
+    if ($("#sheet-url") && document.activeElement !== $("#sheet-url")) $("#sheet-url").value = state.sheetUrl;
     $("#control-search").value = state.searchQuery;
     buildColorControls();
     buildFilterControls();
@@ -2377,24 +3329,196 @@
     $("#settings-modal").classList.remove("visible");
   }
 
+  function showSheetSettings() {
+    $("#sheet-url").value = state.sheetUrl || DEFAULT_SHEET_URL;
+    $("#sheet-backdrop").classList.add("visible");
+    $("#sheet-modal").classList.add("visible");
+    setTimeout(() => {
+      $("#sheet-url").focus();
+      $("#sheet-url").select();
+    }, 0);
+  }
+
+  function hideSheetSettings() {
+    $("#sheet-backdrop").classList.remove("visible");
+    $("#sheet-modal").classList.remove("visible");
+  }
+
+  function saveSheetFromModal() {
+    const input = $("#sheet-url");
+    if (!input.value.trim()) {
+      setError("Paste a Google Sheet URL before saving the sheet source.");
+      return;
+    }
+    const wasSheet = state.sourceMode === "sheet";
+    state.sourceMode = "sheet";
+    const beforeKey = mappingStorageKey();
+    if (!commitSheetUrlInput()) return;
+    if (!wasSheet || mappingStorageKey() !== beforeKey) {
+      mapping = loadMappingForCurrentSource();
+      ensureStateForMapping();
+      state.selectedIds = new Set();
+      state.timelineMin = null;
+      state.timelineMax = null;
+    }
+    state.lastSignature = "";
+    state.resetLayoutOnNextRefresh = true;
+    hideSheetSettings();
+    syncUrlState();
+    refreshData({ manual: true });
+  }
+
+  function columnOptions(selectedValue, allowNone = true) {
+    const columns = availableColumns();
+    const noneOption = allowNone ? `<option value="">None</option>` : "";
+    return noneOption + columns.map((column) => (
+      `<option value="${escapeHtml(column)}"${column === selectedValue ? " selected" : ""}>${escapeHtml(column)}</option>`
+    )).join("");
+  }
+
+  function renderColumnMapList() {
+    const columns = availableColumns();
+    const container = $("#column-map-list");
+    if (!columns.length) {
+      container.innerHTML = `<div class="settings-help">Load a sheet or sample CSV first so the app can read headers.</div>`;
+      return;
+    }
+    const selected = {
+      embedding: new Set(mapping.embeddingColumns || []),
+      color: new Set(mapping.colorColumns || []),
+      filter: new Set(mapping.filterColumns || []),
+    };
+    container.innerHTML = `
+      <div class="column-map-head">
+        <span>Column</span>
+        <span>Embed</span>
+        <span>Color</span>
+        <span>Filter</span>
+      </div>
+      ${columns.map((column) => `
+        <div class="column-map-row" data-column-option data-column-name="${escapeHtml(column.toLowerCase())}">
+          <div class="column-map-name">
+            <span class="column-name" title="${escapeHtml(column)}">${escapeHtml(column)}</span>
+            <span class="column-kind">${escapeHtml(columnKind(column))}</span>
+          </div>
+          <label class="column-check" title="Use for semantic embedding">
+            <input type="checkbox" data-column-role="embedding" value="${escapeHtml(column)}"${selected.embedding.has(column) ? " checked" : ""} aria-label="Embed ${escapeHtml(column)}">
+          </label>
+          <label class="column-check" title="Show as color control">
+            <input type="checkbox" data-column-role="color" value="${escapeHtml(column)}"${selected.color.has(column) ? " checked" : ""} aria-label="Color ${escapeHtml(column)}">
+          </label>
+          <label class="column-check" title="Show as filter control">
+            <input type="checkbox" data-column-role="filter" value="${escapeHtml(column)}"${selected.filter.has(column) ? " checked" : ""} aria-label="Filter ${escapeHtml(column)}">
+          </label>
+        </div>
+      `).join("")}
+    `;
+    container.onchange = (event) => {
+      if (event.target.matches("input[type='checkbox']")) updateColumnsSummary();
+    };
+  }
+
+  function columnKind(column) {
+    const name = column.toLowerCase();
+    if (name.includes("time") || name.includes("date")) return "time";
+    if (name.includes("email")) return "id";
+    if (name.includes("score") || name.includes("count") || name.includes("time")) return "num";
+    if (name.includes("category") || name.includes("role") || name.includes("region") || name.includes("team")) return "cat";
+    return "text";
+  }
+
+  function checkedColumns(role) {
+    return [...document.querySelectorAll(`#column-map-list input[data-column-role="${role}"]:checked`)]
+      .map((input) => input.value)
+      .filter(Boolean);
+  }
+
+  function showColumns() {
+    const columns = availableColumns();
+    $("#columns-help").textContent = columns.length
+      ? "Choose which columns build embeddings and which columns appear as labels, filters, colors, and timeline controls."
+      : "No CSV headers are loaded yet. Refresh the sheet or sample first, then return here.";
+    renderColumnMapList();
+    $("#label-column-select").innerHTML = columnOptions(mapping.labelColumn, true);
+    $("#timeline-column-select").innerHTML = columnOptions(mapping.timelineColumn, true);
+    $("#column-search").value = "";
+    filterColumnOptions();
+    updateColumnsSummary();
+    $("#columns-backdrop").classList.add("visible");
+    $("#columns-modal").classList.add("visible");
+    const form = $("#columns-modal .settings-form");
+    if (form) form.scrollTop = 0;
+  }
+
+  function filterColumnOptions() {
+    const query = ($("#column-search")?.value || "").trim().toLowerCase();
+    for (const option of document.querySelectorAll("[data-column-option]")) {
+      option.classList.toggle("hidden", Boolean(query && !option.dataset.columnName.includes(query)));
+    }
+  }
+
+  function updateColumnsSummary() {
+    const embedCount = checkedColumns("embedding").length;
+    const colorCount = checkedColumns("color").length;
+    const filterCount = checkedColumns("filter").length;
+    const columns = availableColumns().length;
+    const summary = $("#columns-summary");
+    if (summary) summary.textContent = `${columns} columns | ${embedCount} embed | ${colorCount} color | ${filterCount} filter`;
+  }
+
+  function hideColumns() {
+    $("#columns-backdrop").classList.remove("visible");
+    $("#columns-modal").classList.remove("visible");
+  }
+
+  function saveColumnsFromModal() {
+    const embeddingColumns = checkedColumns("embedding");
+    if (!embeddingColumns.length) {
+      $("#columns-help").textContent = "Select at least one embedding column before saving.";
+      return;
+    }
+    mapping = cleanMapping({
+      embeddingColumns,
+      labelColumn: $("#label-column-select").value,
+      timelineColumn: $("#timeline-column-select").value,
+      colorColumns: checkedColumns("color"),
+      filterColumns: checkedColumns("filter"),
+    });
+    saveMappingForCurrentSource();
+    ensureStateForMapping();
+    state.selectedIds = new Set();
+    state.timelineMin = null;
+    state.timelineMax = null;
+    state.lastSignature = "";
+    state.resetLayoutOnNextRefresh = true;
+    hideColumns();
+    buildDynamicControls();
+    refreshData({ manual: true });
+  }
+
   function bindUi() {
     $("#source-mode").onchange = (event) => {
       state.sourceMode = event.target.value;
+      mapping = loadMappingForCurrentSource();
+      ensureStateForMapping();
       state.lastSignature = "";
+      state.resetLayoutOnNextRefresh = true;
       pausePlay();
       syncUrlState();
       refreshData({ manual: true });
     };
-    $("#sheet-id").onchange = (event) => {
-      state.sheetId = event.target.value.trim() || DEFAULT_SHEET_ID;
-      state.lastSignature = "";
-      refreshData({ manual: true });
-    };
-    $("#sheet-gid").onchange = (event) => {
-      state.gid = event.target.value.trim() || DEFAULT_GID;
-      state.lastSignature = "";
-      refreshData({ manual: true });
-    };
+    $("#sheet-config-btn").onclick = showSheetSettings;
+    $("#sheet-url").addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      saveSheetFromModal();
+    });
+    $("#poll-seconds").onchange = commitRefreshInput;
+    $("#poll-seconds").addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      $("#poll-seconds").blur();
+    });
     $("#refresh-btn").onclick = () => refreshData({ manual: true });
     $("#pause-btn").onclick = () => {
       state.paused = !state.paused;
@@ -2402,11 +3526,23 @@
       syncUrlState();
     };
     $("#key-btn").onclick = showSettings;
+    $("#columns-btn").onclick = showColumns;
     $("#theme-btn").onclick = () => {
       const next = document.body.dataset.theme === "light" ? "dark" : "light";
       document.body.dataset.theme = next;
       localStorage.setItem(THEME_STORAGE, next);
       draw(sceneRows());
+    };
+    $("#header-minimize-btn").onclick = () => {
+      state.headerMinimized = !state.headerMinimized;
+      localStorage.setItem(HEADER_MINIMIZED_STORAGE, state.headerMinimized ? "1" : "0");
+      syncLayoutChrome();
+      setTimeout(() => resize(), 0);
+    };
+    $("#sidebar-minimize-btn").onclick = () => {
+      state.sidebarMinimized = !state.sidebarMinimized;
+      localStorage.setItem(SIDEBAR_MINIMIZED_STORAGE, state.sidebarMinimized ? "1" : "0");
+      syncLayoutChrome();
     };
     $("#control-search").oninput = (event) => {
       state.searchQuery = event.target.value;
@@ -2444,11 +3580,40 @@
       renderPopup();
       syncUrlState();
     };
+    $("#sheet-close").onclick = hideSheetSettings;
+    $("#sheet-backdrop").onclick = hideSheetSettings;
+    $("#cancel-sheet-btn").onclick = hideSheetSettings;
+    $("#save-sheet-btn").onclick = saveSheetFromModal;
     $("#settings-close").onclick = hideSettings;
     $("#settings-backdrop").onclick = hideSettings;
+    $("#columns-close").onclick = hideColumns;
+    $("#columns-backdrop").onclick = hideColumns;
+    $("#save-columns-btn").onclick = saveColumnsFromModal;
+    $("#column-search").oninput = filterColumnOptions;
+    for (const button of document.querySelectorAll("[data-column-clear-role]")) {
+      button.addEventListener("click", () => {
+        const role = button.dataset.columnClearRole;
+        for (const input of document.querySelectorAll(`#column-map-list input[data-column-role="${role}"]`)) input.checked = false;
+        updateColumnsSummary();
+      });
+    }
+    $("#reset-columns-btn").onclick = () => {
+      mapping = cleanMapping(DEFAULT_MAPPING);
+      showColumns();
+    };
     $("#save-key-btn").onclick = () => {
-      state.apiKey = $("#api-key-input").value.trim();
-      state.previewVectors = $("#preview-vectors").checked;
+      const nextKey = $("#api-key-input").value.trim();
+      const nextPreview = $("#preview-vectors").checked;
+      if (!nextKey && !nextPreview) {
+        state.apiKey = "";
+        state.previewVectors = false;
+        localStorage.removeItem(KEY_STORAGE);
+        localStorage.setItem(PREVIEW_STORAGE, "0");
+        setError("Gemini API key required. Paste a key or enable local preview vectors, then save again.");
+        return;
+      }
+      state.apiKey = nextKey;
+      state.previewVectors = nextPreview;
       if (state.apiKey) localStorage.setItem(KEY_STORAGE, state.apiKey);
       else localStorage.removeItem(KEY_STORAGE);
       localStorage.setItem(PREVIEW_STORAGE, state.previewVectors ? "1" : "0");
@@ -2538,7 +3703,7 @@
       if (event.button !== 0 || state.playing) return;
       const { x, y } = pointerPosition(event);
       dragState = { startX: x, startY: y, currentX: x, currentY: y, moved: false };
-      overlayNode.setPointerCapture?.(event.pointerId);
+      try { overlayNode.setPointerCapture?.(event.pointerId); } catch (error) {}
       hideTooltip();
     });
     overlayNode.addEventListener("pointermove", (event) => {
@@ -2561,7 +3726,7 @@
     });
     overlayNode.addEventListener("pointerup", (event) => {
       if (!dragState) return;
-      overlayNode.releasePointerCapture?.(event.pointerId);
+      try { overlayNode.releasePointerCapture?.(event.pointerId); } catch (error) {}
       const finished = dragState;
       if (!finished.moved) {
         clearSelectionBox();
@@ -2588,7 +3753,9 @@
     });
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
+        hideSheetSettings();
         hideSettings();
+        hideColumns();
         dismissPopup();
       }
     });
@@ -2596,18 +3763,22 @@
 
   function startPolling() {
     clearInterval(pollTimer);
+    state.refreshMs = normalizeRefreshMs(state.refreshMs);
     pollTimer = setInterval(() => {
       if (!state.paused && !state.refreshing) refreshData();
-    }, POLL_MS);
+    }, state.refreshMs);
   }
 
   function boot() {
     const storedTheme = localStorage.getItem(THEME_STORAGE);
     if (storedTheme === "light" || storedTheme === "dark") document.body.dataset.theme = storedTheme;
     applyUrlState();
+    mapping = loadMappingForCurrentSource();
+    ensureStateForMapping();
     bindUi();
+    refreshIcons();
+    syncLayoutChrome();
     syncControlsFromState();
-    if (!state.apiKey && !state.previewVectors) showSettings();
     refreshData();
     startPolling();
     setInterval(updateClockStatus, 1000);
@@ -2616,6 +3787,8 @@
   window.addEventListener("resize", resize);
   window.addEventListener("popstate", () => {
     applyUrlState();
+    mapping = loadMappingForCurrentSource();
+    ensureStateForMapping();
     syncControlsFromState();
     refreshScene({ syncUrl: false });
   });
