@@ -113,7 +113,7 @@ Subscribe to the channel and enable notifications so that you don't miss new upl
 ## 📊 Marks Dashboard (Official)
 
 **Looker Studio Dashboard:**
-(YET TO UPDATE)
+https://datastudio.google.com/u/0/reporting/72eb6b59-5e28-4678-a19d-a0d7c26def96/page/MMx2F
 
 Use this dashboard to track:
 
@@ -166,5 +166,5 @@ Make it a habit to check these channels regularly to stay informed about any cha
 | SEEK Portal              | https://seek.onlinedegree.iitm.ac.in/courses/ns_26t2_se2002   |
 | Discussion Forum         | https://discourse.onlinedegree.iitm.ac.in/c/courses/tds-kb/34 |
 | YouTube Channel          | https://www.youtube.com/@se-lr5ff                             |
-| Official Marks Dashboard | Looker Studio (YET TO UPDATE)                                 |
+| Official Marks Dashboard | https://datastudio.google.com/u/0/reporting/72eb6b59-5e28-4678-a19d-a0d7c26def96/page/MMx2F                                 |
 | Quick Marks Dashboard    | https://exam.sanand.workers.dev/score                         |
