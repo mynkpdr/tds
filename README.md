@@ -72,7 +72,7 @@ Add this calendar to stay updated on:
 
 ## 🎓 SEEK Portal
 
-**Portal:** https://seek.onlinedegree.iitm.ac.in/courses/ns_26t2_se2002
+**Portal:** https://seek.onlinedegree.iitm.ac.in/courses/ns_26t3_se2002
 
 The SEEK portal will contain minimal course content.
 
@@ -113,7 +113,7 @@ Subscribe to the channel and enable notifications so that you don't miss new upl
 ## 📊 Marks Dashboard (Official)
 
 **Looker Studio Dashboard:**
-https://datastudio.google.com/u/0/reporting/72eb6b59-5e28-4678-a19d-a0d7c26def96/page/MMx2F
+TBU
 
 Use this dashboard to track:
 
@@ -163,8 +163,8 @@ Make it a habit to check these channels regularly to stay informed about any cha
 | Submission Portal        | https://exam.sanand.workers.dev/                              |
 | AIPipe                   | https://aipipe.org/                                           |
 | Course Calendar          | https://calendar.google.com/calendar/u/2?cid=Y19ib2Y3bnMxbDduNm84azA1dHA4YTlxNWIwZ0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t               |
-| SEEK Portal              | https://seek.onlinedegree.iitm.ac.in/courses/ns_26t2_se2002   |
+| SEEK Portal              | https://seek.onlinedegree.iitm.ac.in/courses/ns_26t3_se2002   |
 | Discussion Forum         | https://discourse.onlinedegree.iitm.ac.in/c/courses/tds-kb/34 |
 | YouTube Channel          | https://www.youtube.com/@se-lr5ff                             |
-| Official Marks Dashboard | https://datastudio.google.com/u/0/reporting/72eb6b59-5e28-4678-a19d-a0d7c26def96/page/MMx2F                                 |
+| Official Marks Dashboard | TBU                                 |
 | Quick Marks Dashboard    | https://exam.sanand.workers.dev/score                         |
